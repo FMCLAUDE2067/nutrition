@@ -262,9 +262,9 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
     </div>
 
     <div class="card">
-      <div class="hd">MEALS <span id="mealTot">0 CAL</span></div>
-      <div id="meals"></div>
-      <button class="btn full" id="addMeal">+ ADD MEAL</button>
+      <div class="hd">FOOD LOG <span id="logTot">0 CAL</span></div>
+      <button class="btn full" id="addFood" style="margin-bottom:9px">+ ADD FOOD</button>
+      <div id="log"></div>
     </div>
 
     <div class="card">
@@ -282,18 +282,32 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
     <div class="sheet">
       <h3><span id="foodTitle">ADD FOOD</span><button class="btn sm" id="foodX">CLOSE</button></h3>
       <div class="tabs">
-        <button class="btn on" id="tabFav">SAVED</button>
+        <button class="btn on" id="tabPrep">PREP</button>
+        <button class="btn" id="tabFav">FOODS</button>
         <button class="btn" id="tabNew">NEW</button>
       </div>
 
-      <div id="paneFav">
+      <div id="panePrep">
+        <div id="preplist"></div>
+        <div class="hint">Meal prep entries are managed in Settings.</div>
+      </div>
+
+      <div id="paneFav" style="display:none">
         <div class="fld"><input type="text" id="favSearch" placeholder="search saved foods"></div>
         <div id="favlist"></div>
       </div>
 
       <div id="paneNew" style="display:none">
+        <button class="btn full" id="scanBtn" style="margin-bottom:9px">SCAN BARCODE</button>
         <div class="fld"><label>NAME</label><input type="text" id="fName" placeholder="chicken breast 150g"></div>
-        <div class="fld"><label>CALORIES PER SERVE</label><input type="number" id="fCal" inputmode="numeric" placeholder="248"></div>
+        <div class="fld">
+          <label>ENERGY PER SERVE</label>
+          <div style="display:flex;gap:5px">
+            <input type="number" id="fCal" inputmode="numeric" placeholder="248">
+            <button class="btn on" id="unitCal" style="flex:0 0 46px">CAL</button>
+            <button class="btn" id="unitKj" style="flex:0 0 46px">kJ</button>
+          </div>
+        </div>
         <div class="g4">
           <div class="fld"><label>PROT g</label><input type="number" id="fP" inputmode="decimal" placeholder="opt"></div>
           <div class="fld"><label>CARB g</label><input type="number" id="fC" inputmode="decimal" placeholder="opt"></div>
@@ -312,8 +326,26 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
         <button class="btn" data-q="2">x2</button>
         <input type="number" id="qIn" value="1" step="0.1" inputmode="decimal">
       </div>
-      <button class="btn full" id="foodAdd">ADD TO MEAL</button>
-      <div class="hint">Macros are optional. Bars show a warning colour when some items in the day have no macro data.</div>
+      <button class="btn full" id="foodAdd">ADD TO LOG</button>
+      <div class="hint" id="foodMsg">Macros are optional. The macro bars flag partial data when something in the day is missing a value.</div>
+    </div>
+  </div>
+
+  <div class="modal" id="scanModal">
+    <div class="sheet">
+      <h3><span>SCAN BARCODE</span><button class="btn sm" id="scanX">CANCEL</button></h3>
+      <div id="reader" style="width:100%;min-height:180px;border:1px solid var(--line-faint)"></div>
+      <div class="hint" id="scanMsg">Point the camera at the barcode.</div>
+
+      <div id="gramsPane" style="display:none;margin-top:11px">
+        <div style="font-size:12px;margin-bottom:9px" id="prodName"></div>
+        <div class="fld">
+          <label>HOW MANY GRAMS?</label>
+          <input type="number" id="gIn" inputmode="numeric" placeholder="100">
+        </div>
+        <div id="gramsPreview" class="hint"></div>
+        <button class="btn full" id="gramsOk" style="margin-top:7px">USE THIS</button>
+      </div>
     </div>
   </div>
 
@@ -342,6 +374,25 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
       </div>
       <div class="hint" id="syncMsg">Your token is kept in this browser only and is never written to the synced file. Enter it once on each device.</div>
 
+      <div class="hd" style="margin-top:16px">MEAL PREP <span id="prepCount">0</span></div>
+      <div class="fld"><input type="text" id="pName" placeholder="chicken and rice bowl"></div>
+      <div class="fld">
+        <div style="display:flex;gap:5px">
+          <input type="number" id="pCal" inputmode="numeric" placeholder="energy">
+          <button class="btn on" id="pUnitCal" style="flex:0 0 46px">CAL</button>
+          <button class="btn" id="pUnitKj" style="flex:0 0 46px">kJ</button>
+        </div>
+      </div>
+      <div class="g4">
+        <div class="fld"><label>PROT g</label><input type="number" id="pP" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>CARB g</label><input type="number" id="pC" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>FAT g</label><input type="number" id="pF" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>FIBRE g</label><input type="number" id="pB" inputmode="decimal" placeholder="opt"></div>
+      </div>
+      <button class="btn full" id="prepAdd">ADD MEAL PREP</button>
+      <div id="prepManage" style="max-height:150px;overflow-y:auto;border:1px solid var(--line-faint);margin-top:9px"></div>
+      <div class="hint" id="prepMsg">These appear on the PREP tab when you add food, for one tap logging.</div>
+
       <div class="hd" style="margin-top:16px">BACKUP</div>
       <div class="g2">
         <button class="btn" id="expBtn">EXPORT FILE</button>
@@ -363,7 +414,8 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 (function(){
 "use strict";
 
-var VERSION = "1.3.0";
+var VERSION = "1.4.0";
+var KJ = 4.184;
 var KEY = "fnt_v1";
 var CFGKEY = "fnt_sync";
 var GFILE = "nutrition-terminal-data.json";
@@ -387,14 +439,33 @@ function normalise(d){
   for (var k in DEF) if (typeof d.settings[k] !== "number") d.settings[k] = DEF[k];
   if (typeof d.settings.ts !== "number") d.settings.ts = 0;
   if (!Array.isArray(d.favourites)) d.favourites = [];
-  for (var i = 0; i < d.favourites.length; i++){
+  if (!Array.isArray(d.preps)) d.preps = [];
+  var i;
+  for (i = 0; i < d.favourites.length; i++){
     if (typeof d.favourites[i].ts !== "number") d.favourites[i].ts = 0;
   }
+  for (i = 0; i < d.preps.length; i++){
+    if (typeof d.preps[i].ts !== "number") d.preps[i].ts = 0;
+  }
   if (!d.days || typeof d.days !== "object") d.days = {};
-  for (var dk in d.days){ if (typeof d.days[dk].ts !== "number") d.days[dk].ts = 0; }
+  for (var dk in d.days){
+    var dd = d.days[dk];
+    if (typeof dd.ts !== "number") dd.ts = 0;
+    if (!Array.isArray(dd.items)) dd.items = [];
+    if (Array.isArray(dd.meals)){
+      for (i = 0; i < dd.meals.length; i++){
+        var mi = dd.meals[i].items;
+        if (Array.isArray(mi)){
+          for (var j = 0; j < mi.length; j++) dd.items.push(mi[j]);
+        }
+      }
+      delete dd.meals;
+    }
+  }
   if (!d.tombs || typeof d.tombs !== "object") d.tombs = {};
   return d;
 }
+function toCal(v, isKj){ return isKj ? v / KJ : v; }
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){}
   queuePush();
@@ -418,9 +489,9 @@ function todayKey(){ return keyOf(new Date()); }
 function dateOf(k){ var p = k.split("-"); return new Date(+p[0], +p[1]-1, +p[2]); }
 function shift(k, n){ var d = dateOf(k); d.setDate(d.getDate() + n); return keyOf(d); }
 function day(k){
-  if (!db.days[k]) db.days[k] = { meals:[], water:0, trained:null, ts:0 };
+  if (!db.days[k]) db.days[k] = { items:[], water:0, trained:null, ts:0 };
   var d = db.days[k];
-  if (!Array.isArray(d.meals)) d.meals = [];
+  if (!Array.isArray(d.items)) d.items = [];
   if (typeof d.water !== "number") d.water = 0;
   if (typeof d.ts !== "number") d.ts = 0;
   if (d.trained !== true && d.trained !== false) d.trained = null;
@@ -437,22 +508,14 @@ var $ = function(id){ return document.getElementById(id); };
 
 function totals(k){
   var d = day(k), t = { cal:0, p:0, c:0, f:0, b:0, missing:false };
-  for (var i=0;i<d.meals.length;i++){
-    var items = d.meals[i].items || [];
-    for (var j=0;j<items.length;j++){
-      var it = items[j], q = num(it.qty) || 1;
-      t.cal += num(it.cal) * q;
-      if (blank(it.p) || blank(it.c) || blank(it.f) || blank(it.b)) t.missing = true;
-      t.p += num(it.p) * q; t.c += num(it.c) * q;
-      t.f += num(it.f) * q; t.b += num(it.b) * q;
-    }
+  for (var i=0;i<d.items.length;i++){
+    var it = d.items[i], q = num(it.qty) || 1;
+    t.cal += num(it.cal) * q;
+    if (blank(it.p) || blank(it.c) || blank(it.f) || blank(it.b)) t.missing = true;
+    t.p += num(it.p) * q; t.c += num(it.c) * q;
+    t.f += num(it.f) * q; t.b += num(it.b) * q;
   }
   return t;
-}
-function mealTotal(m){
-  var s = 0, items = m.items || [];
-  for (var i=0;i<items.length;i++) s += num(items[i].cal) * (num(items[i].qty) || 1);
-  return s;
 }
 function streak(){
   var n = 0, k = todayKey();
@@ -507,80 +570,62 @@ function render(){
   var n = streak();
   $("stk").textContent = n + (n === 1 ? " day" : " days");
 
-  $("mealTot").textContent = r(t.cal) + " CAL";
-  renderMeals(d);
+  $("logTot").textContent = r(t.cal) + " CAL";
+  renderLog(d);
   renderChart();
 }
 
-function renderMeals(d){
-  var box = $("meals");
+function renderLog(d){
+  var box = $("log");
   box.textContent = "";
-  if (!d.meals.length){
+  if (!d.items.length){
     var e = document.createElement("div");
     e.className = "empty";
-    e.textContent = "NO MEALS LOGGED";
+    e.textContent = "NOTHING LOGGED YET";
     box.appendChild(e);
     return;
   }
-  d.meals.forEach(function(m, mi){
-    var wrap = document.createElement("div");
-    wrap.className = "meal";
+  var wrap = document.createElement("div");
+  wrap.className = "meal";
+  d.items.forEach(function(it, ii){
+    var row = document.createElement("div");
+    row.className = "item";
+    var q = num(it.qty) || 1;
 
-    var hd = document.createElement("div");
-    hd.className = "mhd";
-    var nm = document.createElement("span");
-    nm.textContent = "MEAL " + (mi + 1);
-    var right = document.createElement("span");
-    right.style.cssText = "display:flex;gap:8px;align-items:center";
-    var tot = document.createElement("span");
-    tot.className = "mtot";
-    tot.textContent = r(mealTotal(m)) + " cal";
-    var del = document.createElement("button");
-    del.className = "xb"; del.textContent = "×";
-    del.setAttribute("aria-label", "Delete meal " + (mi + 1));
-    del.onclick = function(){ d.meals.splice(mi, 1); touch(viewDate); save(); render(); };
-    right.appendChild(tot); right.appendChild(del);
-    hd.appendChild(nm); hd.appendChild(right);
-    wrap.appendChild(hd);
+    var left = document.createElement("span");
+    left.className = "nm";
+    var nmd = document.createElement("div");
+    nmd.textContent = it.name + (q !== 1 ? " x" + q : "");
+    left.appendChild(nmd);
+    if (it.t){
+      var tm = document.createElement("div");
+      tm.className = "mc";
+      tm.textContent = it.t;
+      left.appendChild(tm);
+    }
 
-    (m.items || []).forEach(function(it, ii){
-      var row = document.createElement("div");
-      row.className = "item";
-      var q = num(it.qty) || 1;
+    var mac = document.createElement("span");
+    mac.className = "mc";
+    var bits = [];
+    if (!blank(it.p)) bits.push("P" + r1(num(it.p)*q));
+    if (!blank(it.c)) bits.push("C" + r1(num(it.c)*q));
+    if (!blank(it.f)) bits.push("F" + r1(num(it.f)*q));
+    if (!blank(it.b)) bits.push("Fb" + r1(num(it.b)*q));
+    mac.textContent = bits.join(" ");
 
-      var nmd = document.createElement("span");
-      nmd.className = "nm";
-      nmd.textContent = it.name + (q !== 1 ? " x" + q : "");
-      var mac = document.createElement("span");
-      mac.className = "mc";
-      var bits = [];
-      if (!blank(it.p)) bits.push("P" + r1(num(it.p)*q));
-      if (!blank(it.c)) bits.push("C" + r1(num(it.c)*q));
-      if (!blank(it.f)) bits.push("F" + r1(num(it.f)*q));
-      if (!blank(it.b)) bits.push("Fb" + r1(num(it.b)*q));
-      mac.textContent = bits.join(" ");
-      var cal = document.createElement("span");
-      cal.className = "cal";
-      cal.textContent = r(num(it.cal) * q);
-      var x = document.createElement("button");
-      x.className = "xb"; x.textContent = "×";
-      x.setAttribute("aria-label", "Remove " + it.name);
-      x.onclick = function(){ m.items.splice(ii, 1); touch(viewDate); save(); render(); };
+    var cal = document.createElement("span");
+    cal.className = "cal";
+    cal.textContent = r(num(it.cal) * q);
 
-      row.appendChild(nmd); row.appendChild(mac); row.appendChild(cal); row.appendChild(x);
-      wrap.appendChild(row);
-    });
+    var x = document.createElement("button");
+    x.className = "xb"; x.textContent = "×";
+    x.setAttribute("aria-label", "Remove " + it.name);
+    x.onclick = function(){ d.items.splice(ii, 1); touch(viewDate); save(); render(); };
 
-    var act = document.createElement("div");
-    act.className = "mactions";
-    var add = document.createElement("button");
-    add.className = "btn sm"; add.textContent = "+ FOOD";
-    add.onclick = function(){ openFood(mi); };
-    act.appendChild(add);
-    wrap.appendChild(act);
-
-    box.appendChild(wrap);
+    row.appendChild(left); row.appendChild(mac); row.appendChild(cal); row.appendChild(x);
+    wrap.appendChild(row);
   });
+  box.appendChild(wrap);
 }
 
 function renderChart(){
@@ -656,27 +701,64 @@ function renderAvgs(){
 }
 
 /* ---------- food modal ---------- */
-var targetMeal = 0, picked = null, qty = 1;
+var picked = null, pickedPrep = null, qty = 1, kjMode = false, scanned = null;
 
-function openFood(mi){
-  targetMeal = mi;
-  picked = null; qty = 1;
+function openFood(){
+  picked = null; pickedPrep = null; qty = 1; scanned = null;
   $("qIn").value = "1";
   setQtyButtons(1);
   $("fName").value = ""; $("fCal").value = "";
   $("fP").value = ""; $("fC").value = ""; $("fF").value = ""; $("fB").value = "";
-  $("foodTitle").textContent = "ADD TO MEAL " + (mi + 1);
+  $("fSave").checked = true;
+  setUnit(false);
+  $("foodTitle").textContent = "ADD FOOD";
   $("favSearch").value = "";
-  tab(db.favourites.length ? "fav" : "new");
+  setFoodMsg("Macros are optional. The macro bars flag partial data when something in the day is missing a value.", false);
+  tab(db.preps.length ? "prep" : (db.favourites.length ? "fav" : "new"));
+  renderPreps();
   renderFavs();
   $("foodModal").className = "modal on";
 }
 function tab(which){
-  var f = which === "fav";
-  $("paneFav").style.display = f ? "" : "none";
-  $("paneNew").style.display = f ? "none" : "";
-  $("tabFav").className = "btn" + (f ? " on" : "");
-  $("tabNew").className = "btn" + (f ? "" : " on");
+  $("panePrep").style.display = which === "prep" ? "" : "none";
+  $("paneFav").style.display = which === "fav" ? "" : "none";
+  $("paneNew").style.display = which === "new" ? "" : "none";
+  $("tabPrep").className = "btn" + (which === "prep" ? " on" : "");
+  $("tabFav").className = "btn" + (which === "fav" ? " on" : "");
+  $("tabNew").className = "btn" + (which === "new" ? " on" : "");
+}
+function setUnit(kj){
+  kjMode = kj;
+  $("unitCal").className = "btn" + (kj ? "" : " on");
+  $("unitKj").className = "btn" + (kj ? " on" : "");
+}
+function setFoodMsg(msg, bad){
+  var el = $("foodMsg");
+  el.textContent = msg;
+  el.style.color = bad ? "var(--bad)" : "var(--grn-fade)";
+}
+function renderPreps(){
+  var box = $("preplist");
+  box.textContent = "";
+  box.className = "";
+  box.style.cssText = "max-height:200px;overflow-y:auto;border:1px solid var(--line-faint)";
+  if (!db.preps.length){
+    var e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = "NO MEAL PREP SAVED";
+    box.appendChild(e);
+    return;
+  }
+  db.preps.forEach(function(p){
+    var row = document.createElement("div");
+    row.className = "fav";
+    if (pickedPrep && pickedPrep.id === p.id) row.style.background = "var(--line-faint)";
+    var a = document.createElement("span"); a.textContent = p.name;
+    var b = document.createElement("span"); b.className = "fc"; b.textContent = r(p.cal) + " cal";
+    row.appendChild(a); row.appendChild(b);
+    row.onclick = function(){ pickedPrep = p; picked = null; renderPreps(); };
+    box.appendChild(row);
+  });
 }
 function setQtyButtons(v){
   var bs = document.querySelectorAll("#qtyrow .btn");
@@ -702,7 +784,7 @@ function renderFavs(){
     var a = document.createElement("span"); a.textContent = f.name;
     var b = document.createElement("span"); b.className = "fc"; b.textContent = f.cal + " cal";
     row.appendChild(a); row.appendChild(b);
-    row.onclick = function(){ picked = f; renderFavs(); };
+    row.onclick = function(){ picked = f; pickedPrep = null; renderFavs(); };
     box.appendChild(row);
   });
 }
@@ -712,29 +794,37 @@ function optNum(el){
   var n = parseFloat(v);
   return isFinite(n) ? n : null;
 }
+function nowHM(){ var n = new Date(); return pad(n.getHours()) + ":" + pad(n.getMinutes()); }
+
 function commitFood(){
-  var item;
-  if ($("paneFav").style.display !== "none"){
-    if (!picked){ flash($("favlist")); return; }
-    item = { name:picked.name, cal:picked.cal, p:picked.p, c:picked.c, f:picked.f, b:picked.b, qty:qty };
+  var item, src;
+  if ($("panePrep").style.display !== "none"){
+    if (!pickedPrep){ flash($("preplist")); setFoodMsg("Pick a meal prep entry first.", true); return; }
+    src = pickedPrep;
+    item = { name:src.name, cal:src.cal, p:src.p, c:src.c, f:src.f, b:src.b, qty:qty, t:nowHM() };
+  } else if ($("paneFav").style.display !== "none"){
+    if (!picked){ flash($("favlist")); setFoodMsg("Pick a saved food first.", true); return; }
+    src = picked;
+    item = { name:src.name, cal:src.cal, p:src.p, c:src.c, f:src.f, b:src.b, qty:qty, t:nowHM() };
   } else {
-    var name = $("fName").value.trim(), cal = parseFloat($("fCal").value);
-    if (!name || !isFinite(cal)){ flash($("paneNew")); return; }
-    item = { name:name, cal:cal, p:optNum($("fP")), c:optNum($("fC")), f:optNum($("fF")), b:optNum($("fB")), qty:qty };
+    var name = $("fName").value.trim(), raw = parseFloat($("fCal").value);
+    if (!name || !isFinite(raw)){ flash($("paneNew")); setFoodMsg("A name and an energy value are required.", true); return; }
+    var cal = toCal(raw, kjMode);
+    item = { name:name, cal:cal, p:optNum($("fP")), c:optNum($("fC")), f:optNum($("fF")), b:optNum($("fB")), qty:qty, t:nowHM() };
     if ($("fSave").checked){
-      db.favourites.push({ id:Date.now() + "" + Math.floor(Math.random()*1000), name:name, cal:cal, p:item.p, c:item.c, f:item.f, b:item.b, ts:Date.now() });
+      var fav = { id:newId(), name:name, cal:cal, p:item.p, c:item.c, f:item.f, b:item.b, ts:Date.now() };
+      if (scanned) fav.barcode = scanned;
+      db.favourites.push(fav);
       db.favourites.sort(function(a,b){ return a.name.localeCompare(b.name); });
     }
   }
-  var d = day(viewDate);
-  if (!d.meals[targetMeal]) return;
-  if (!d.meals[targetMeal].items) d.meals[targetMeal].items = [];
-  d.meals[targetMeal].items.push(item);
+  day(viewDate).items.push(item);
   touch(viewDate);
   save();
   $("foodModal").className = "modal";
   render();
 }
+function newId(){ return Date.now() + "" + Math.floor(Math.random()*1000); }
 function flash(el){
   el.style.outline = "1px solid var(--bad)";
   setTimeout(function(){ el.style.outline = ""; }, 500);
@@ -750,6 +840,7 @@ function openSettings(){
   renderSyncState();
   if (cfg.err) setSyncMsg(cfg.err, true);
   renderFavManage();
+  renderPrepManage();
   $("setModal").className = "modal on";
 }
 function renderFavManage(){
@@ -802,14 +893,13 @@ $("wClr").onclick = function(){ day(viewDate).water = 0; touch(viewDate); save()
 $("tYes").onclick = function(){ var d = day(viewDate); d.trained = d.trained === true ? null : true; touch(viewDate); save(); render(); };
 $("tNo").onclick = function(){ var d = day(viewDate); d.trained = d.trained === false ? null : false; touch(viewDate); save(); render(); };
 
-$("addMeal").onclick = function(){
-  day(viewDate).meals.push({ items:[] });
-  touch(viewDate); save(); render();
-  $("scroll").scrollTop = $("scroll").scrollHeight;
-};
+$("addFood").onclick = function(){ openFood(); };
 
+$("tabPrep").onclick = function(){ tab("prep"); };
 $("tabFav").onclick = function(){ tab("fav"); };
 $("tabNew").onclick = function(){ tab("new"); };
+$("unitCal").onclick = function(){ setUnit(false); };
+$("unitKj").onclick = function(){ setUnit(true); };
 $("favSearch").oninput = renderFavs;
 $("foodX").onclick = function(){ $("foodModal").className = "modal"; };
 $("foodAdd").onclick = commitFood;
@@ -851,6 +941,7 @@ document.addEventListener("keydown", function(e){
     return;
   }
   if (e.key === "Escape"){
+    if ($("scanModal").className.indexOf("on") >= 0){ closeScan(); return; }
     $("foodModal").className = "modal";
     $("setModal").className = "modal";
   }
@@ -894,7 +985,7 @@ function gh(path, opts){
 }
 
 function payload(){
-  return { v:1, settings:db.settings, favourites:db.favourites, days:db.days, tombs:db.tombs };
+  return { v:2, settings:db.settings, favourites:db.favourites, preps:db.preps, days:db.days, tombs:db.tombs };
 }
 
 function merge(remote){
@@ -912,20 +1003,23 @@ function merge(remote){
     if (!db.tombs[id] || remote.tombs[id] > db.tombs[id]){ db.tombs[id] = remote.tombs[id]; changed = true; }
   }
 
-  var map = {};
-  for (i = 0; i < db.favourites.length; i++) map[db.favourites[i].id] = db.favourites[i];
-  for (i = 0; i < remote.favourites.length; i++){
-    var rf = remote.favourites[i];
-    if (!map[rf.id]){ map[rf.id] = rf; changed = true; }
+  function mergeList(mine, theirs){
+    var map = {}, n;
+    for (n = 0; n < mine.length; n++) map[mine[n].id] = mine[n];
+    for (n = 0; n < theirs.length; n++){
+      if (!map[theirs[n].id]){ map[theirs[n].id] = theirs[n]; changed = true; }
+    }
+    var out = [];
+    for (var id2 in map){
+      var x = map[id2];
+      if (db.tombs[id2] && db.tombs[id2] > (x.ts || 0)){ changed = true; continue; }
+      out.push(x);
+    }
+    out.sort(function(a,b){ return a.name.localeCompare(b.name); });
+    return out;
   }
-  var out = [];
-  for (var fid in map){
-    var f = map[fid];
-    if (db.tombs[fid] && db.tombs[fid] > (f.ts || 0)){ changed = true; continue; }
-    out.push(f);
-  }
-  out.sort(function(a,b){ return a.name.localeCompare(b.name); });
-  db.favourites = out;
+  db.favourites = mergeList(db.favourites, remote.favourites);
+  db.preps = mergeList(db.preps, remote.preps);
 
   return changed;
 }
@@ -957,8 +1051,8 @@ function sync(silent){
     if (changed){
       try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){}
       render();
-      if ($("setModal").className.indexOf("on") >= 0) renderFavManage();
-      if ($("foodModal").className.indexOf("on") >= 0) renderFavs();
+      if ($("setModal").className.indexOf("on") >= 0){ renderFavManage(); renderPrepManage(); }
+      if ($("foodModal").className.indexOf("on") >= 0){ renderFavs(); renderPreps(); }
     }
     if (changed || localDirty || !remote) return pushNow();
   }).then(function(){
@@ -1034,6 +1128,226 @@ $("syncOff").onclick = function(){
   refreshStatus(); renderSyncState();
 };
 
+/* ---------- barcode ---------- */
+var SCANLIB = "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js";
+var scanner = null, libLoading = null, per100 = null;
+
+function setScanMsg(msg, bad){
+  var el = $("scanMsg");
+  el.textContent = msg;
+  el.style.color = bad ? "var(--bad)" : "var(--grn-fade)";
+}
+function loadLib(){
+  if (window.Html5Qrcode) return Promise.resolve();
+  if (libLoading) return libLoading;
+  libLoading = new Promise(function(res, rej){
+    var s = document.createElement("script");
+    s.src = SCANLIB;
+    s.onload = function(){ window.Html5Qrcode ? res() : rej(new Error("scanner library did not load")); };
+    s.onerror = function(){ rej(new Error("could not download the scanner library")); };
+    document.head.appendChild(s);
+  });
+  return libLoading;
+}
+function closeScan(){
+  $("scanModal").className = "modal";
+  $("gramsPane").style.display = "none";
+  per100 = null;
+  if (scanner){
+    try { scanner.stop().then(function(){ try { scanner.clear(); } catch(e){} }); } catch(e){}
+    scanner = null;
+  }
+}
+$("scanX").onclick = closeScan;
+
+$("scanBtn").onclick = function(){
+  $("scanModal").className = "modal on";
+  $("gramsPane").style.display = "none";
+  setScanMsg("Loading scanner...", false);
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
+    setScanMsg("This browser will not give the page camera access. Note the numbers off the label and use the form instead.", true);
+    return;
+  }
+  loadLib().then(function(){
+    setScanMsg("Point the camera at the barcode.", false);
+    scanner = new window.Html5Qrcode("reader");
+    return scanner.start(
+      { facingMode: "environment" },
+      { fps: 10, qrbox: { width: 240, height: 140 } },
+      onScan,
+      function(){}
+    );
+  })["catch"](function(e){
+    var m = e && e.message ? e.message : "scanner failed";
+    if (/permission|NotAllowed/i.test(m)) m = "Camera permission was refused. Allow it in your browser settings, or type the numbers in manually.";
+    setScanMsg(m, true);
+  });
+};
+
+function onScan(text){
+  if (scanner){
+    try { scanner.stop(); } catch(e){}
+    scanner = null;
+  }
+  var code = String(text).trim();
+  scanned = code;
+  setScanMsg("Found " + code + ", looking it up...", false);
+
+  var localHit = null;
+  for (var i = 0; i < db.favourites.length; i++){
+    if (db.favourites[i].barcode === code) localHit = db.favourites[i];
+  }
+  if (localHit){
+    fillForm(localHit.name, localHit.cal, localHit.p, localHit.c, localHit.f, localHit.b);
+    closeScan();
+    setFoodMsg("Loaded " + localHit.name + " from your saved foods.", false);
+    return;
+  }
+  lookup(code);
+}
+
+function lookup(code){
+  var url = "https://world.openfoodfacts.org/api/v2/product/" + encodeURIComponent(code) +
+            ".json?fields=product_name,brands,serving_size,nutriments";
+  fetch(url).then(function(res){
+    if (!res.ok) throw new Error("lookup failed, HTTP " + res.status);
+    return res.json();
+  }).then(function(j){
+    if (!j || j.status === 0 || !j.product) throw new Error("notfound");
+    var p = j.product, n = p.nutriments || {};
+    var cal100 = energyPer100(n);
+    if (cal100 === null) throw new Error("noenergy");
+    per100 = {
+      name: [p.brands, p.product_name].filter(Boolean).join(" ").trim() || ("Product " + code),
+      cal: cal100,
+      p: pick(n, "proteins_100g"), c: pick(n, "carbohydrates_100g"),
+      f: pick(n, "fat_100g"), b: pick(n, "fiber_100g")
+    };
+    $("prodName").textContent = per100.name + " — " + r(per100.cal) + " cal per 100g";
+    var serve = parseFloat(String(p.serving_size || "").replace(/[^0-9.]/g, ""));
+    $("gIn").value = isFinite(serve) && serve > 0 ? serve : 100;
+    $("gramsPane").style.display = "";
+    setScanMsg("Found it. Check the weight below.", false);
+    previewGrams();
+  })["catch"](function(e){
+    var m = e && e.message;
+    if (m === "notfound") m = "Not in the database. Type the label values into the form and tick save, and next time this barcode will be recognised.";
+    else if (m === "noenergy") m = "Found the product but it has no energy value recorded. Enter it manually.";
+    else m = "Lookup failed: " + m + ". Enter it manually.";
+    setScanMsg(m, true);
+    setTimeout(function(){
+      closeScan();
+      setFoodMsg("Barcode " + scanned + " noted. Fill in the values and tick save to remember it.", false);
+    }, 2600);
+  });
+}
+function pick(n, key){ return typeof n[key] === "number" ? n[key] : null; }
+function energyPer100(n){
+  if (typeof n["energy-kcal_100g"] === "number") return n["energy-kcal_100g"];
+  if (typeof n["energy-kj_100g"] === "number") return n["energy-kj_100g"] / KJ;
+  if (typeof n["energy_100g"] === "number"){
+    return n.energy_unit === "kcal" ? n["energy_100g"] : n["energy_100g"] / KJ;
+  }
+  return null;
+}
+function scale(v, g){ return v === null ? null : (v * g) / 100; }
+function previewGrams(){
+  if (!per100) return;
+  var g = parseFloat($("gIn").value);
+  if (!isFinite(g) || g <= 0){ $("gramsPreview").textContent = ""; return; }
+  var bits = ["" + r(scale(per100.cal, g)) + " cal"];
+  if (per100.p !== null) bits.push("P" + r1(scale(per100.p, g)));
+  if (per100.c !== null) bits.push("C" + r1(scale(per100.c, g)));
+  if (per100.f !== null) bits.push("F" + r1(scale(per100.f, g)));
+  if (per100.b !== null) bits.push("Fb" + r1(scale(per100.b, g)));
+  $("gramsPreview").textContent = bits.join("  ");
+}
+$("gIn").oninput = previewGrams;
+$("gramsOk").onclick = function(){
+  if (!per100) return;
+  var g = parseFloat($("gIn").value);
+  if (!isFinite(g) || g <= 0){ flash($("gIn")); return; }
+  fillForm(per100.name + " " + r(g) + "g", scale(per100.cal, g),
+    scale(per100.p, g), scale(per100.c, g), scale(per100.f, g), scale(per100.b, g));
+  closeScan();
+  setFoodMsg("Filled from the barcode. Check it, then add to your log.", false);
+};
+function fillForm(name, cal, p, c, f, b){
+  tab("new");
+  setUnit(false);
+  $("fName").value = name;
+  $("fCal").value = r(cal);
+  $("fP").value = p === null || p === undefined ? "" : r1(p);
+  $("fC").value = c === null || c === undefined ? "" : r1(c);
+  $("fF").value = f === null || f === undefined ? "" : r1(f);
+  $("fB").value = b === null || b === undefined ? "" : r1(b);
+}
+
+/* ---------- meal prep ---------- */
+var pKj = false;
+function setPrepUnit(kj){
+  pKj = kj;
+  $("pUnitCal").className = "btn" + (kj ? "" : " on");
+  $("pUnitKj").className = "btn" + (kj ? " on" : "");
+}
+$("pUnitCal").onclick = function(){ setPrepUnit(false); };
+$("pUnitKj").onclick = function(){ setPrepUnit(true); };
+
+function renderPrepManage(){
+  var box = $("prepManage");
+  box.textContent = "";
+  $("prepCount").textContent = db.preps.length;
+  if (!db.preps.length){
+    var e = document.createElement("div");
+    e.className = "empty"; e.textContent = "NONE SAVED";
+    box.appendChild(e); return;
+  }
+  db.preps.forEach(function(p, i){
+    var row = document.createElement("div");
+    row.className = "item";
+    var a = document.createElement("span"); a.className = "nm"; a.textContent = p.name;
+    var m = document.createElement("span"); m.className = "mc";
+    var bits = [];
+    if (!blank(p.p)) bits.push("P" + r1(p.p));
+    if (!blank(p.c)) bits.push("C" + r1(p.c));
+    if (!blank(p.f)) bits.push("F" + r1(p.f));
+    if (!blank(p.b)) bits.push("Fb" + r1(p.b));
+    m.textContent = bits.join(" ");
+    var b = document.createElement("span"); b.className = "cal"; b.textContent = r(p.cal);
+    var x = document.createElement("button");
+    x.className = "xb"; x.textContent = "×";
+    x.setAttribute("aria-label", "Delete " + p.name);
+    x.onclick = function(){
+      db.tombs[p.id] = Date.now();
+      db.preps.splice(i, 1);
+      save(); renderPrepManage();
+    };
+    row.appendChild(a); row.appendChild(m); row.appendChild(b); row.appendChild(x);
+    box.appendChild(row);
+  });
+}
+function setPrepMsg(msg, bad){
+  var el = $("prepMsg");
+  el.textContent = msg;
+  el.style.color = bad ? "var(--bad)" : "var(--grn-fade)";
+}
+$("prepAdd").onclick = function(){
+  var name = $("pName").value.trim(), raw = parseFloat($("pCal").value);
+  if (!name || !isFinite(raw)){ setPrepMsg("A name and an energy value are required.", true); return; }
+  db.preps.push({
+    id:newId(), name:name, cal:toCal(raw, pKj),
+    p:optNum($("pP")), c:optNum($("pC")), f:optNum($("pF")), b:optNum($("pB")),
+    ts:Date.now()
+  });
+  db.preps.sort(function(a,b){ return a.name.localeCompare(b.name); });
+  save();
+  $("pName").value = ""; $("pCal").value = "";
+  $("pP").value = ""; $("pC").value = ""; $("pF").value = ""; $("pB").value = "";
+  setPrepUnit(false);
+  renderPrepManage();
+  setPrepMsg("Saved. It now appears on the PREP tab.", false);
+};
+
 /* ---------- backup ---------- */
 function setBackupMsg(msg, bad){
   var el = $("backupMsg");
@@ -1083,6 +1397,7 @@ $("impFile").onchange = function(){
     save();
     render();
     renderFavManage();
+    renderPrepManage();
     var fd = Object.keys(obj.days || {}).length;
     var ff = (obj.favourites || []).length;
     setBackupMsg("Merged " + plural(fd, "day", "days") + " and " + plural(ff, "food", "foods") +
@@ -1212,6 +1527,7 @@ function fetchQuote(){
 }
 fetchQuote();
 
+try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){}
 render();
 refreshStatus();
 if (connected()) sync(true);
