@@ -233,6 +233,12 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
     </div>
 
     <div class="card">
+      <div class="hd">FOOD LOG <span id="logTot">0 CAL</span></div>
+      <button class="btn full" id="addFood" style="margin-bottom:9px">+ ADD FOOD</button>
+      <div id="log"></div>
+    </div>
+
+    <div class="card">
       <div class="hd">WATER</div>
       <div class="brow">
         <div class="blab"><span id="wPct">0%</span><span><b id="wTxt">0</b> ml</span></div>
@@ -259,12 +265,6 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
         <button class="btn" id="tNo">NO</button>
       </div>
       <div id="streak"><span>CURRENT STREAK</span><b id="stk">0 days</b></div>
-    </div>
-
-    <div class="card">
-      <div class="hd">FOOD LOG <span id="logTot">0 CAL</span></div>
-      <button class="btn full" id="addFood" style="margin-bottom:9px">+ ADD FOOD</button>
-      <div id="log"></div>
     </div>
 
     <div class="card">
@@ -299,9 +299,10 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 
       <div id="paneNew" style="display:none">
         <button class="btn full" id="scanBtn" style="margin-bottom:9px">SCAN BARCODE</button>
-        <div class="fld"><label>NAME</label><input type="text" id="fName" placeholder="chicken breast 150g"></div>
+        <div class="fld"><label>NAME</label><input type="text" id="fName" placeholder="chicken breast"></div>
+        <div class="fld"><label>WEIGHT OF THIS AMOUNT (g)</label><input type="number" id="fG" inputmode="numeric" placeholder="150"></div>
         <div class="fld">
-          <label>ENERGY PER SERVE</label>
+          <label>ENERGY FOR THAT WEIGHT</label>
           <div style="display:flex;gap:5px">
             <input type="number" id="fCal" inputmode="numeric" placeholder="248">
             <button class="btn on" id="unitCal" style="flex:0 0 46px">CAL</button>
@@ -319,15 +320,42 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
         </label>
       </div>
 
-      <div id="qtyrow">
-        <button class="btn" data-q="0.5">x0.5</button>
-        <button class="btn on" data-q="1">x1</button>
-        <button class="btn" data-q="1.5">x1.5</button>
-        <button class="btn" data-q="2">x2</button>
-        <input type="number" id="qIn" value="1" step="0.1" inputmode="decimal">
+      <div id="gramsRow" style="display:none">
+        <div class="fld">
+          <label id="gramsLab">HOW MANY GRAMS?</label>
+          <input type="number" id="qG" inputmode="numeric" placeholder="100">
+        </div>
+        <div class="hint" id="gramsOut" style="margin-top:0"></div>
       </div>
-      <button class="btn full" id="foodAdd">ADD TO LOG</button>
+      <button class="btn full" id="foodAdd" style="margin-top:9px">ADD TO LOG</button>
       <div class="hint" id="foodMsg">Macros are optional. The macro bars flag partial data when something in the day is missing a value.</div>
+    </div>
+  </div>
+
+  <div class="modal" id="editModal">
+    <div class="sheet">
+      <h3><span id="editTitle">EDIT</span><button class="btn sm" id="editX">CLOSE</button></h3>
+      <div class="fld"><label>NAME</label><input type="text" id="eName"></div>
+      <div class="fld"><label>SERVING WEIGHT (g)</label><input type="number" id="eG" inputmode="numeric" placeholder="100"></div>
+      <div class="fld">
+        <label>ENERGY FOR THAT WEIGHT</label>
+        <div style="display:flex;gap:5px">
+          <input type="number" id="eCal" inputmode="numeric">
+          <button class="btn on" id="eUnitCal" style="flex:0 0 46px">CAL</button>
+          <button class="btn" id="eUnitKj" style="flex:0 0 46px">kJ</button>
+        </div>
+      </div>
+      <div class="g4">
+        <div class="fld"><label>PROT g</label><input type="number" id="eP" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>CARB g</label><input type="number" id="eC" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>FAT g</label><input type="number" id="eF" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>FIBRE g</label><input type="number" id="eB" inputmode="decimal" placeholder="opt"></div>
+      </div>
+      <div class="g2" style="margin-top:7px">
+        <button class="btn" id="editSave">SAVE</button>
+        <button class="btn dim" id="editDel">DELETE</button>
+      </div>
+      <div class="hint" id="editMsg">The serving weight is what the numbers above refer to. When you log this food you type the grams and it scales from here.</div>
     </div>
   </div>
 
@@ -376,7 +404,9 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 
       <div class="hd" style="margin-top:16px">MEAL PREP <span id="prepCount">0</span></div>
       <div class="fld"><input type="text" id="pName" placeholder="chicken and rice bowl"></div>
+      <div class="fld"><label>WEIGHT OF ONE SERVE (g)</label><input type="number" id="pG" inputmode="numeric" placeholder="450"></div>
       <div class="fld">
+        <label>ENERGY FOR THAT WEIGHT</label>
         <div style="display:flex;gap:5px">
           <input type="number" id="pCal" inputmode="numeric" placeholder="energy">
           <button class="btn on" id="pUnitCal" style="flex:0 0 46px">CAL</button>
@@ -414,7 +444,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 (function(){
 "use strict";
 
-var VERSION = "1.4.0";
+var VERSION = "1.5.0";
 var KJ = 4.184;
 var KEY = "fnt_v1";
 var CFGKEY = "fnt_sync";
@@ -443,9 +473,11 @@ function normalise(d){
   var i;
   for (i = 0; i < d.favourites.length; i++){
     if (typeof d.favourites[i].ts !== "number") d.favourites[i].ts = 0;
+    if (typeof d.favourites[i].g !== "number" || d.favourites[i].g <= 0) d.favourites[i].g = null;
   }
   for (i = 0; i < d.preps.length; i++){
     if (typeof d.preps[i].ts !== "number") d.preps[i].ts = 0;
+    if (typeof d.preps[i].g !== "number" || d.preps[i].g <= 0) d.preps[i].g = null;
   }
   if (!d.days || typeof d.days !== "object") d.days = {};
   for (var dk in d.days){
@@ -460,6 +492,18 @@ function normalise(d){
         }
       }
       delete dd.meals;
+    }
+    for (i = 0; i < dd.items.length; i++){
+      var it = dd.items[i];
+      if (typeof it.qty === "number" && it.qty !== 1){
+        it.cal = num(it.cal) * it.qty;
+        if (!blank(it.p)) it.p = num(it.p) * it.qty;
+        if (!blank(it.c)) it.c = num(it.c) * it.qty;
+        if (!blank(it.f)) it.f = num(it.f) * it.qty;
+        if (!blank(it.b)) it.b = num(it.b) * it.qty;
+        if (typeof it.g === "number") it.g = it.g * it.qty;
+      }
+      delete it.qty;
     }
   }
   if (!d.tombs || typeof d.tombs !== "object") d.tombs = {};
@@ -509,11 +553,11 @@ var $ = function(id){ return document.getElementById(id); };
 function totals(k){
   var d = day(k), t = { cal:0, p:0, c:0, f:0, b:0, missing:false };
   for (var i=0;i<d.items.length;i++){
-    var it = d.items[i], q = num(it.qty) || 1;
-    t.cal += num(it.cal) * q;
+    var it = d.items[i];
+    t.cal += num(it.cal);
     if (blank(it.p) || blank(it.c) || blank(it.f) || blank(it.b)) t.missing = true;
-    t.p += num(it.p) * q; t.c += num(it.c) * q;
-    t.f += num(it.f) * q; t.b += num(it.b) * q;
+    t.p += num(it.p); t.c += num(it.c);
+    t.f += num(it.f); t.b += num(it.b);
   }
   return t;
 }
@@ -590,12 +634,11 @@ function renderLog(d){
   d.items.forEach(function(it, ii){
     var row = document.createElement("div");
     row.className = "item";
-    var q = num(it.qty) || 1;
 
     var left = document.createElement("span");
     left.className = "nm";
     var nmd = document.createElement("div");
-    nmd.textContent = it.name + (q !== 1 ? " x" + q : "");
+    nmd.textContent = it.name + (typeof it.g === "number" && it.g > 0 ? " " + r(it.g) + "g" : "");
     left.appendChild(nmd);
     if (it.t){
       var tm = document.createElement("div");
@@ -607,15 +650,15 @@ function renderLog(d){
     var mac = document.createElement("span");
     mac.className = "mc";
     var bits = [];
-    if (!blank(it.p)) bits.push("P" + r1(num(it.p)*q));
-    if (!blank(it.c)) bits.push("C" + r1(num(it.c)*q));
-    if (!blank(it.f)) bits.push("F" + r1(num(it.f)*q));
-    if (!blank(it.b)) bits.push("Fb" + r1(num(it.b)*q));
+    if (!blank(it.p)) bits.push("P" + r1(num(it.p)));
+    if (!blank(it.c)) bits.push("C" + r1(num(it.c)));
+    if (!blank(it.f)) bits.push("F" + r1(num(it.f)));
+    if (!blank(it.b)) bits.push("Fb" + r1(num(it.b)));
     mac.textContent = bits.join(" ");
 
     var cal = document.createElement("span");
     cal.className = "cal";
-    cal.textContent = r(num(it.cal) * q);
+    cal.textContent = r(num(it.cal));
 
     var x = document.createElement("button");
     x.className = "xb"; x.textContent = "×";
@@ -701,13 +744,13 @@ function renderAvgs(){
 }
 
 /* ---------- food modal ---------- */
-var picked = null, pickedPrep = null, qty = 1, kjMode = false, scanned = null;
+var picked = null, pickedPrep = null, kjMode = false, scanned = null;
+
+function sel(){ return pickedPrep || picked; }
 
 function openFood(){
-  picked = null; pickedPrep = null; qty = 1; scanned = null;
-  $("qIn").value = "1";
-  setQtyButtons(1);
-  $("fName").value = ""; $("fCal").value = "";
+  picked = null; pickedPrep = null; scanned = null;
+  $("fName").value = ""; $("fCal").value = ""; $("fG").value = "";
   $("fP").value = ""; $("fC").value = ""; $("fF").value = ""; $("fB").value = "";
   $("fSave").checked = true;
   setUnit(false);
@@ -726,7 +769,30 @@ function tab(which){
   $("tabPrep").className = "btn" + (which === "prep" ? " on" : "");
   $("tabFav").className = "btn" + (which === "fav" ? " on" : "");
   $("tabNew").className = "btn" + (which === "new" ? " on" : "");
+  if (which === "new"){ picked = null; pickedPrep = null; renderFavs(); renderPreps(); }
+  syncGramsRow();
 }
+function syncGramsRow(){
+  var s = sel();
+  if (!s || !s.g){ $("gramsRow").style.display = "none"; $("gramsOut").textContent = ""; return; }
+  $("gramsRow").style.display = "";
+  $("gramsLab").textContent = "HOW MANY GRAMS? (saved as " + r(s.g) + "g)";
+  if (!$("qG").value) $("qG").value = r(s.g);
+  previewSel();
+}
+function previewSel(){
+  var s = sel();
+  if (!s || !s.g){ $("gramsOut").textContent = ""; return; }
+  var g = parseFloat($("qG").value);
+  if (!isFinite(g) || g <= 0){ $("gramsOut").textContent = ""; return; }
+  var k = g / s.g, bits = ["" + r(num(s.cal) * k) + " cal"];
+  if (!blank(s.p)) bits.push("P" + r1(num(s.p) * k));
+  if (!blank(s.c)) bits.push("C" + r1(num(s.c) * k));
+  if (!blank(s.f)) bits.push("F" + r1(num(s.f) * k));
+  if (!blank(s.b)) bits.push("Fb" + r1(num(s.b) * k));
+  $("gramsOut").textContent = bits.join("  ");
+}
+$("qG").oninput = previewSel;
 function setUnit(kj){
   kjMode = kj;
   $("unitCal").className = "btn" + (kj ? "" : " on");
@@ -750,20 +816,32 @@ function renderPreps(){
     return;
   }
   db.preps.forEach(function(p){
-    var row = document.createElement("div");
-    row.className = "fav";
-    if (pickedPrep && pickedPrep.id === p.id) row.style.background = "var(--line-faint)";
-    var a = document.createElement("span"); a.textContent = p.name;
-    var b = document.createElement("span"); b.className = "fc"; b.textContent = r(p.cal) + " cal";
-    row.appendChild(a); row.appendChild(b);
-    row.onclick = function(){ pickedPrep = p; picked = null; renderPreps(); };
-    box.appendChild(row);
+    box.appendChild(pickRow(p, pickedPrep, function(){
+      pickedPrep = p; picked = null;
+      $("qG").value = p.g ? r(p.g) : "";
+      renderPreps(); renderFavs(); syncGramsRow(); needsWeightMsg(p);
+    }));
   });
 }
-function setQtyButtons(v){
-  var bs = document.querySelectorAll("#qtyrow .btn");
-  for (var i = 0; i < bs.length; i++){
-    bs[i].className = "btn" + (parseFloat(bs[i].getAttribute("data-q")) === v ? " on" : "");
+function pickRow(item, current, onPick){
+  var row = document.createElement("div");
+  row.className = "fav";
+  if (current && current.id === item.id) row.style.background = "var(--line-faint)";
+  var a = document.createElement("span");
+  a.textContent = item.name;
+  var b = document.createElement("span");
+  b.className = "fc";
+  if (!item.g){ b.textContent = "NEEDS WEIGHT"; b.style.color = "var(--warn)"; }
+  else b.textContent = r(item.cal) + " cal / " + r(item.g) + "g";
+  row.appendChild(a); row.appendChild(b);
+  row.onclick = onPick;
+  return row;
+}
+function needsWeightMsg(item){
+  if (!item.g){
+    setFoodMsg(item.name + " has no serving weight yet. Open Settings, tap it, and set the weight its numbers refer to.", true);
+  } else {
+    setFoodMsg("Set the grams, then add to your log.", false);
   }
 }
 function renderFavs(){
@@ -778,14 +856,11 @@ function renderFavs(){
     return;
   }
   list.forEach(function(f){
-    var row = document.createElement("div");
-    row.className = "fav" + (picked && picked.id === f.id ? " on" : "");
-    if (picked && picked.id === f.id) row.style.background = "var(--line-faint)";
-    var a = document.createElement("span"); a.textContent = f.name;
-    var b = document.createElement("span"); b.className = "fc"; b.textContent = f.cal + " cal";
-    row.appendChild(a); row.appendChild(b);
-    row.onclick = function(){ picked = f; pickedPrep = null; renderFavs(); };
-    box.appendChild(row);
+    box.appendChild(pickRow(f, picked, function(){
+      picked = f; pickedPrep = null;
+      $("qG").value = f.g ? r(f.g) : "";
+      renderFavs(); renderPreps(); syncGramsRow(); needsWeightMsg(f);
+    }));
   });
 }
 function optNum(el){
@@ -796,23 +871,38 @@ function optNum(el){
 }
 function nowHM(){ var n = new Date(); return pad(n.getHours()) + ":" + pad(n.getMinutes()); }
 
+function scaleBy(v, k){ return blank(v) ? null : num(v) * k; }
+
 function commitFood(){
-  var item, src;
-  if ($("panePrep").style.display !== "none"){
-    if (!pickedPrep){ flash($("preplist")); setFoodMsg("Pick a meal prep entry first.", true); return; }
-    src = pickedPrep;
-    item = { name:src.name, cal:src.cal, p:src.p, c:src.c, f:src.f, b:src.b, qty:qty, t:nowHM() };
-  } else if ($("paneFav").style.display !== "none"){
-    if (!picked){ flash($("favlist")); setFoodMsg("Pick a saved food first.", true); return; }
-    src = picked;
-    item = { name:src.name, cal:src.cal, p:src.p, c:src.c, f:src.f, b:src.b, qty:qty, t:nowHM() };
+  var item;
+  if ($("paneNew").style.display === "none"){
+    var src = sel();
+    if (!src){
+      flash($("panePrep").style.display !== "none" ? $("preplist") : $("favlist"));
+      setFoodMsg("Pick something from the list first.", true);
+      return;
+    }
+    if (!src.g){ needsWeightMsg(src); flash($("gramsRow")); return; }
+    var g = parseFloat($("qG").value);
+    if (!isFinite(g) || g <= 0){ flash($("qG")); setFoodMsg("Enter how many grams.", true); return; }
+    var k = g / src.g;
+    item = {
+      name: src.name, g: g, t: nowHM(),
+      cal: num(src.cal) * k,
+      p: scaleBy(src.p, k), c: scaleBy(src.c, k),
+      f: scaleBy(src.f, k), b: scaleBy(src.b, k)
+    };
   } else {
-    var name = $("fName").value.trim(), raw = parseFloat($("fCal").value);
+    var name = $("fName").value.trim(), raw = parseFloat($("fCal").value), ng = parseFloat($("fG").value);
     if (!name || !isFinite(raw)){ flash($("paneNew")); setFoodMsg("A name and an energy value are required.", true); return; }
+    if (!isFinite(ng) || ng <= 0){ flash($("fG")); setFoodMsg("Enter the weight in grams that these numbers are for.", true); return; }
     var cal = toCal(raw, kjMode);
-    item = { name:name, cal:cal, p:optNum($("fP")), c:optNum($("fC")), f:optNum($("fF")), b:optNum($("fB")), qty:qty, t:nowHM() };
+    item = {
+      name: name, g: ng, t: nowHM(), cal: cal,
+      p: optNum($("fP")), c: optNum($("fC")), f: optNum($("fF")), b: optNum($("fB"))
+    };
     if ($("fSave").checked){
-      var fav = { id:newId(), name:name, cal:cal, p:item.p, c:item.c, f:item.f, b:item.b, ts:Date.now() };
+      var fav = { id:newId(), name:name, g:ng, cal:cal, p:item.p, c:item.c, f:item.f, b:item.b, ts:Date.now() };
       if (scanned) fav.barcode = scanned;
       db.favourites.push(fav);
       db.favourites.sort(function(a,b){ return a.name.localeCompare(b.name); });
@@ -852,22 +942,7 @@ function renderFavManage(){
     e.className = "empty"; e.textContent = "NONE SAVED";
     box.appendChild(e); return;
   }
-  db.favourites.forEach(function(f, i){
-    var row = document.createElement("div");
-    row.className = "item";
-    var a = document.createElement("span"); a.className = "nm"; a.textContent = f.name;
-    var b = document.createElement("span"); b.className = "cal"; b.textContent = f.cal;
-    var x = document.createElement("button");
-    x.className = "xb"; x.textContent = "×";
-    x.setAttribute("aria-label", "Delete " + f.name);
-    x.onclick = function(){
-      db.tombs[f.id] = Date.now();
-      db.favourites.splice(i, 1);
-      save(); renderFavManage();
-    };
-    row.appendChild(a); row.appendChild(b); row.appendChild(x);
-    box.appendChild(row);
-  });
+  db.favourites.forEach(function(f){ box.appendChild(manageRow(f, "fav")); });
 }
 
 /* ---------- events ---------- */
@@ -904,20 +979,6 @@ $("favSearch").oninput = renderFavs;
 $("foodX").onclick = function(){ $("foodModal").className = "modal"; };
 $("foodAdd").onclick = commitFood;
 
-var qbs = document.querySelectorAll("#qtyrow .btn");
-for (var qi = 0; qi < qbs.length; qi++){
-  qbs[qi].onclick = function(){
-    qty = parseFloat(this.getAttribute("data-q"));
-    $("qIn").value = qty;
-    setQtyButtons(qty);
-  };
-}
-$("qIn").oninput = function(){
-  var v = parseFloat(this.value);
-  qty = isFinite(v) && v > 0 ? v : 1;
-  setQtyButtons(qty);
-};
-
 $("openSet").onclick = openSettings;
 $("setX").onclick = function(){ $("setModal").className = "modal"; };
 $("setSave").onclick = function(){
@@ -942,6 +1003,7 @@ document.addEventListener("keydown", function(e){
   }
   if (e.key === "Escape"){
     if ($("scanModal").className.indexOf("on") >= 0){ closeScan(); return; }
+    if ($("editModal").className.indexOf("on") >= 0){ $("editModal").className = "modal"; editing = null; return; }
     $("foodModal").className = "modal";
     $("setModal").className = "modal";
   }
@@ -1007,7 +1069,8 @@ function merge(remote){
     var map = {}, n;
     for (n = 0; n < mine.length; n++) map[mine[n].id] = mine[n];
     for (n = 0; n < theirs.length; n++){
-      if (!map[theirs[n].id]){ map[theirs[n].id] = theirs[n]; changed = true; }
+      var th = theirs[n], cur = map[th.id];
+      if (!cur || (th.ts || 0) > (cur.ts || 0)){ map[th.id] = th; changed = true; }
     }
     var out = [];
     for (var id2 in map){
@@ -1128,6 +1191,91 @@ $("syncOff").onclick = function(){
   refreshStatus(); renderSyncState();
 };
 
+/* ---------- edit saved item ---------- */
+var editing = null, editKind = "", eKj = false;
+
+function setEUnit(kj){
+  eKj = kj;
+  $("eUnitCal").className = "btn" + (kj ? "" : " on");
+  $("eUnitKj").className = "btn" + (kj ? " on" : "");
+}
+$("eUnitCal").onclick = function(){ setEUnit(false); };
+$("eUnitKj").onclick = function(){ setEUnit(true); };
+$("editX").onclick = function(){ $("editModal").className = "modal"; editing = null; };
+
+function openEdit(item, kind){
+  editing = item; editKind = kind;
+  setEUnit(false);
+  $("editTitle").textContent = kind === "prep" ? "EDIT MEAL PREP" : "EDIT FOOD";
+  $("eName").value = item.name;
+  $("eG").value = item.g ? r(item.g) : "";
+  $("eCal").value = r(num(item.cal));
+  $("eP").value = blank(item.p) ? "" : r1(num(item.p));
+  $("eC").value = blank(item.c) ? "" : r1(num(item.c));
+  $("eF").value = blank(item.f) ? "" : r1(num(item.f));
+  $("eB").value = blank(item.b) ? "" : r1(num(item.b));
+  setEditMsg(item.g
+    ? "The serving weight is what the numbers below refer to. Logging scales from here."
+    : "This one has no serving weight. Set what the numbers refer to, for example 100g.", !item.g);
+  $("editModal").className = "modal on";
+}
+function setEditMsg(msg, bad){
+  var el = $("editMsg");
+  el.textContent = msg;
+  el.style.color = bad ? "var(--warn)" : "var(--grn-fade)";
+}
+$("editSave").onclick = function(){
+  if (!editing) return;
+  var name = $("eName").value.trim(), raw = parseFloat($("eCal").value), g = parseFloat($("eG").value);
+  if (!name || !isFinite(raw)){ setEditMsg("A name and an energy value are required.", true); return; }
+  if (!isFinite(g) || g <= 0){ setEditMsg("Enter the serving weight in grams.", true); return; }
+  editing.name = name;
+  editing.g = g;
+  editing.cal = toCal(raw, eKj);
+  editing.p = optNum($("eP")); editing.c = optNum($("eC"));
+  editing.f = optNum($("eF")); editing.b = optNum($("eB"));
+  editing.ts = Date.now();
+  var list = editKind === "prep" ? db.preps : db.favourites;
+  list.sort(function(a,b){ return a.name.localeCompare(b.name); });
+  save();
+  $("editModal").className = "modal";
+  editing = null;
+  renderFavManage(); renderPrepManage();
+  if ($("foodModal").className.indexOf("on") >= 0){ renderFavs(); renderPreps(); syncGramsRow(); }
+};
+$("editDel").onclick = function(){
+  if (!editing) return;
+  var list = editKind === "prep" ? db.preps : db.favourites;
+  for (var i = 0; i < list.length; i++){
+    if (list[i].id === editing.id){ list.splice(i, 1); break; }
+  }
+  db.tombs[editing.id] = Date.now();
+  if (picked && picked.id === editing.id) picked = null;
+  if (pickedPrep && pickedPrep.id === editing.id) pickedPrep = null;
+  save();
+  $("editModal").className = "modal";
+  editing = null;
+  renderFavManage(); renderPrepManage();
+  if ($("foodModal").className.indexOf("on") >= 0){ renderFavs(); renderPreps(); syncGramsRow(); }
+};
+
+function manageRow(item, kind){
+  var row = document.createElement("div");
+  row.className = "item";
+  row.style.cursor = "pointer";
+  var a = document.createElement("span"); a.className = "nm"; a.textContent = item.name;
+  var m = document.createElement("span"); m.className = "mc";
+  m.textContent = item.g ? r(item.g) + "g" : "NEEDS WEIGHT";
+  if (!item.g) m.style.color = "var(--warn)";
+  var b = document.createElement("span"); b.className = "cal"; b.textContent = r(num(item.cal));
+  var e = document.createElement("button");
+  e.className = "xb"; e.textContent = "›";
+  e.setAttribute("aria-label", "Edit " + item.name);
+  row.appendChild(a); row.appendChild(m); row.appendChild(b); row.appendChild(e);
+  row.onclick = function(){ openEdit(item, kind); };
+  return row;
+}
+
 /* ---------- barcode ---------- */
 var SCANLIB = "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js";
 var scanner = null, libLoading = null, per100 = null;
@@ -1198,9 +1346,17 @@ function onScan(text){
     if (db.favourites[i].barcode === code) localHit = db.favourites[i];
   }
   if (localHit){
-    fillForm(localHit.name, localHit.cal, localHit.p, localHit.c, localHit.f, localHit.b);
     closeScan();
-    setFoodMsg("Loaded " + localHit.name + " from your saved foods.", false);
+    if (localHit.g){
+      tab("fav");
+      picked = localHit; pickedPrep = null;
+      $("qG").value = r(localHit.g);
+      renderFavs(); syncGramsRow();
+      setFoodMsg("Matched " + localHit.name + " from your saved foods. Set the grams.", false);
+    } else {
+      fillForm(localHit.name, localHit.g, localHit.cal, localHit.p, localHit.c, localHit.f, localHit.b);
+      setFoodMsg("Matched " + localHit.name + ", but it has no serving weight. Fill in the grams.", true);
+    }
     return;
   }
   lookup(code);
@@ -1267,15 +1423,16 @@ $("gramsOk").onclick = function(){
   if (!per100) return;
   var g = parseFloat($("gIn").value);
   if (!isFinite(g) || g <= 0){ flash($("gIn")); return; }
-  fillForm(per100.name + " " + r(g) + "g", scale(per100.cal, g),
+  fillForm(per100.name, g, scale(per100.cal, g),
     scale(per100.p, g), scale(per100.c, g), scale(per100.f, g), scale(per100.b, g));
   closeScan();
-  setFoodMsg("Filled from the barcode. Check it, then add to your log.", false);
+  setFoodMsg("Filled from the barcode for " + r(g) + "g. Check it, then add to your log.", false);
 };
-function fillForm(name, cal, p, c, f, b){
+function fillForm(name, g, cal, p, c, f, b){
   tab("new");
   setUnit(false);
   $("fName").value = name;
+  $("fG").value = g ? r(g) : "";
   $("fCal").value = r(cal);
   $("fP").value = p === null || p === undefined ? "" : r1(p);
   $("fC").value = c === null || c === undefined ? "" : r1(c);
@@ -1302,29 +1459,7 @@ function renderPrepManage(){
     e.className = "empty"; e.textContent = "NONE SAVED";
     box.appendChild(e); return;
   }
-  db.preps.forEach(function(p, i){
-    var row = document.createElement("div");
-    row.className = "item";
-    var a = document.createElement("span"); a.className = "nm"; a.textContent = p.name;
-    var m = document.createElement("span"); m.className = "mc";
-    var bits = [];
-    if (!blank(p.p)) bits.push("P" + r1(p.p));
-    if (!blank(p.c)) bits.push("C" + r1(p.c));
-    if (!blank(p.f)) bits.push("F" + r1(p.f));
-    if (!blank(p.b)) bits.push("Fb" + r1(p.b));
-    m.textContent = bits.join(" ");
-    var b = document.createElement("span"); b.className = "cal"; b.textContent = r(p.cal);
-    var x = document.createElement("button");
-    x.className = "xb"; x.textContent = "×";
-    x.setAttribute("aria-label", "Delete " + p.name);
-    x.onclick = function(){
-      db.tombs[p.id] = Date.now();
-      db.preps.splice(i, 1);
-      save(); renderPrepManage();
-    };
-    row.appendChild(a); row.appendChild(m); row.appendChild(b); row.appendChild(x);
-    box.appendChild(row);
-  });
+  db.preps.forEach(function(p){ box.appendChild(manageRow(p, "prep")); });
 }
 function setPrepMsg(msg, bad){
   var el = $("prepMsg");
@@ -1332,16 +1467,17 @@ function setPrepMsg(msg, bad){
   el.style.color = bad ? "var(--bad)" : "var(--grn-fade)";
 }
 $("prepAdd").onclick = function(){
-  var name = $("pName").value.trim(), raw = parseFloat($("pCal").value);
+  var name = $("pName").value.trim(), raw = parseFloat($("pCal").value), g = parseFloat($("pG").value);
   if (!name || !isFinite(raw)){ setPrepMsg("A name and an energy value are required.", true); return; }
+  if (!isFinite(g) || g <= 0){ setPrepMsg("Enter the weight of one serve in grams.", true); return; }
   db.preps.push({
-    id:newId(), name:name, cal:toCal(raw, pKj),
+    id:newId(), name:name, g:g, cal:toCal(raw, pKj),
     p:optNum($("pP")), c:optNum($("pC")), f:optNum($("pF")), b:optNum($("pB")),
     ts:Date.now()
   });
   db.preps.sort(function(a,b){ return a.name.localeCompare(b.name); });
   save();
-  $("pName").value = ""; $("pCal").value = "";
+  $("pName").value = ""; $("pCal").value = ""; $("pG").value = "";
   $("pP").value = ""; $("pC").value = ""; $("pF").value = ""; $("pB").value = "";
   setPrepUnit(false);
   renderPrepManage();
