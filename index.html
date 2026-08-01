@@ -48,10 +48,10 @@ body{
 }
 
 /* ---------- boot ---------- */
-#boot{position:absolute;inset:0;background:#000;z-index:60;padding:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end}
-#bootlog{white-space:pre-wrap;color:var(--grn-fade);font-size:11px;line-height:1.22;word-break:break-all}
-#bootlog b{color:var(--grn);font-weight:400}
+#boot{position:absolute;inset:0;background:#000;z-index:60;padding:14px 10px;overflow:hidden;cursor:pointer}
+#bootlog{white-space:pre;color:var(--grn-dim);font-size:11px;line-height:1.55}
 #bootlog i{color:var(--grn);font-style:normal}
+#bootlog u{text-decoration:none;color:var(--grn);animation:blink 1s step-end infinite}
 #quote{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;padding:28px 22px;background:#000}
 #quote.on{display:flex}
 #qtext{font-size:15px;line-height:1.6;color:var(--grn)}
@@ -59,6 +59,7 @@ body{
 #qhint{position:absolute;bottom:20px;left:22px;right:22px;font-size:11px;color:var(--grn-fade);text-align:center}
 #qhint b{font-weight:400;animation:blink 1.1s step-end infinite}
 @keyframes blink{50%{opacity:0}}
+#reader video{width:100%!important;height:auto!important}
 
 /* ---------- chrome ---------- */
 #top{display:flex;align-items:center;justify-content:space-between;padding:9px 12px;border-bottom:1px solid var(--line);flex:0 0 auto}
@@ -455,7 +456,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 (function(){
 "use strict";
 
-var VERSION = "1.7.0";
+var VERSION = "1.7.1";
 var KJ = 4.184;
 var KEY = "fnt_v1";
 var CFGKEY = "fnt_sync";
@@ -1742,92 +1743,48 @@ function pickQuote(){
   return q;
 }
 
-var BLOCKS = [
-[ "static void groups_sort(struct group_info *group_info)",
-  "{",
-  "  int base, max, stride;",
-  "  int gidsetsize = group_info->ngroups;",
-  "  for (stride = 1; stride < gidsetsize; stride = 3 * stride + 1)",
-  "    ; /* nothing */",
-  "  stride /= 3;",
-  "  while (stride) {",
-  "    max = gidsetsize - stride;",
-  "    for (base = 0; base < max; base++) {",
-  "      int left = base, right = left + stride;",
-  "      gid_t tmp = GROUP_AT(group_info, right);",
-  "      while (left >= 0 && GROUP_AT(group_info, left) > tmp) {",
-  "        GROUP_AT(group_info, right) = GROUP_AT(group_info, left);",
-  "        right = left; left -= stride;",
-  "      }",
-  "      GROUP_AT(group_info, right) = tmp;",
-  "    }",
-  "    stride /= 3;",
-  "  }",
-  "}" ],
-[ "  unsigned int nblocks = cp_count * sizeof(**grouplist);",
-  "  if (copy_from_user(group_info->blocks[i], grouplist, len))",
-  "    return -EFAULT;",
-  "  grouplist += NGROUPS_PER_BLOCK;",
-  "  count -= cp_count;",
-  "  return 0;" ],
-[ "0x7ffd4a2b  48 89 e5 41 57 41 56 41  55 41 54 53 48 81 ec 98",
-  "0x7ffd4a3b  00 00 00 64 48 8b 04 25  28 00 00 00 48 89 45 c8",
-  "0x7ffd4a4b  31 c0 48 8d 7d 90 e8 3f  fe ff ff 85 c0 0f 85 a1",
-  "0x7ffd4a5b  02 00 00 48 8b 75 90 48  8d 7d a0 e8 2c ff ff ff" ],
-[ "[    0.000000] Linux version 4.4.12 (arm-unknown-linux-androideabi)",
-  "[    0.000341] Initializing cgroup subsys cpuset",
-  "[    0.000598] Initializing cgroup subsys cpuacct",
-  "[    0.001204] CPU: div instructions available, disabling emulation",
-  "[    0.002877] Memory policy: Data cache writealloc",
-  "[    0.014502] Built 1 zonelists in Zone order, mobility grouping on" ],
-[ "$ nmap -sS -O 10.0.0.0/24",
-  "Starting Nmap 7.94 ( https://nmap.org )",
-  "Host is up (0.00021s latency).",
-  "PORT     STATE SERVICE     VERSION",
-  "22/tcp   open  ssh         OpenSSH 8.9p1",
-  "443/tcp  open  ssl/http    nginx 1.24.0",
-  "9001/tcp open  nutrition   RobCo Terminal Link" ],
-[ "  if (unlikely(!access_ok(VERIFY_READ, buf, count)))",
-  "    goto out_free;",
-  "  spin_lock_irqsave(&dev->lock, flags);",
-  "  list_for_each_entry_safe(pos, n, &dev->queue, list) {",
-  "    if (atomic_dec_and_test(&pos->refcount))",
-  "      kfree_rcu(pos, rcu);",
-  "  }",
-  "  spin_unlock_irqrestore(&dev->lock, flags);" ],
-[ "$ ./decrypt --target vault --keyspace 2^128",
-  "[+] handshake complete",
-  "[+] rotating keyspace ......... 24%",
-  "[+] rotating keyspace ......... 71%",
-  "[+] rotating keyspace ......... 98%",
-  "[+] access granted" ],
-[ "  while (left >= 0 && GROUP_AT(group_info, left) > tmp) {",
-  "    GROUP_AT(group_info, right) = GROUP_AT(group_info, left);",
-  "    right = left;",
-  "    left -= stride;",
-  "  }",
-  "  return -ENOMEM;" ]
+var STATUS = [
+["MOUNTING LOCAL DATASTORE","OK"],
+["DECRYPTING MACRO INDEX","OK"],
+["CALIBRATING HYDRATION","OK"],
+["LOADING TRAINING LOG","OK"],
+["VERIFYING GIST CHECKSUM","OK"],
+["SPOOLING BARCODE SUBSYSTEM","OK"],
+["LINKING MEAL PREP REGISTRY","OK"],
+["PARSING KILOJOULE TABLES","OK"],
+["INDEXING PROTEIN RESERVES","OK"],
+["PURGING TEMP CACHE","OK"],
+["HANDSHAKE WITH VAULT NET","OK"],
+["AUTHENTICATING OPERATOR","OK"],
+["CHECKING FIBRE QUOTA","OK"],
+["ARMING STREAK COUNTER","OK"],
+["SCANNING FOR ROGUE CARBS","OK"],
+["ALLOCATING MACRO BUFFERS","OK"],
+["SYNCING ORBITAL RELAY","OK"],
+["RESOLVING FOOD MANIFEST","OK"]
 ];
 
 var JOKES = [
-  "[    1.337000] finn.ko: loaded, absolute unit detected",
-  "auth: FINN IS THE BEST — signature valid, 4096-bit",
-  "kernel: finn is a fucking beast. no further action required.",
-  "warning: protein intake exceeded double precision, widening to int128",
-  "[    0.420000] benchpress.ko: plates mounted read-only, spotter not found",
-  "sudo: finn is not in the sudoers file. he owns the machine.",
-  "nice -n -20 finn   # cannot be deprioritised",
-  "[    2.048000] gym_streak: counter overflowed, promoting to int64",
-  "fsck: 1 absolute unit found, 0 errors, 0 excuses",
-  "TODO: nerf finn (deferred indefinitely)",
-  "ping finn.local: 0% packet loss, 0.001ms, he was already there",
-  "chmod 777 /gains   # permission denied to everyone else",
-  "[    3.141592] cardio.service failed to start (masked by user finn)",
-  "git blame carbs.c → author: definitely not finn",
-  "[    0.911000] dinner.socket: address already in use",
-  "segfault in module leg_day, core dumped, so did finn",
-  "[    4.096000] mirror.sys: reflection confirmed jacked",
-  "cron: 0 4 * * * /usr/bin/finn --outwork everyone"
+["FINN.KO","LOADED"],
+["ABSOLUTE UNIT","DETECTED"],
+["NERF FINN","DENIED"],
+["CARDIO.SERVICE","MASKED"],
+["GAINS PARTITION","LOCKED"],
+["FINN IS THE BEST","VERIFIED"],
+["FINN IS A FUCKING BEAST","CONFIRMED"],
+["BENCHPRESS.KO","MAXED"],
+["GYM STREAK","OVERFLOW"],
+["LEG DAY","DUMPED"],
+["SPOTTER","NOT FOUND"],
+["EXCUSES FOUND","0"],
+["MIRROR.SYS","JACKED"],
+["CARBS.C AUTHOR","NOT FINN"],
+["PROTEIN INTAKE","OFF SCALE"],
+["FINN PRIORITY","LOCKED MAX"],
+["DINNER.SOCKET","IN USE"],
+["OUTWORK EVERYONE","SCHEDULED"],
+["SUDOERS CHECK","HE OWNS IT"],
+["FINN.EXE","NO LIMIT"]
 ];
 
 function shuffle(a){
@@ -1837,28 +1794,28 @@ function shuffle(a){
   }
   return a;
 }
+function padTo(s, n){ while (s.length < n) s += "."; return s; }
+function statusLine(pair){ return padTo(pair[0] + " ", 30) + " " + pair[1]; }
+
 function buildBoot(){
   var out = [
-    { t:"*** ROBCO INDUSTRIES UNIFIED OPERATING SYSTEM ***", hi:true },
-    { t:"COPYRIGHT 2075-2077 ROBCO INDUSTRIES", hi:true },
-    { t:"-SERVER 6- TERM v" + VERSION, hi:true },
+    { t:"*** ROBCO UNIFIED OPERATING SYSTEM ***", hi:true },
+    { t:"TERM v" + VERSION + "  -SERVER 6-", hi:true },
     { t:"" }
   ];
-  var blocks = shuffle(BLOCKS.slice());
-  var bi = 0;
-  while (out.length < 72){
-    var blk = blocks[bi % blocks.length];
-    bi++;
-    for (var i = 0; i < blk.length; i++) out.push({ t: blk[i] });
-    out.push({ t:"" });
+  var body = [], i;
+  var picks = shuffle(STATUS.slice()).slice(0, 8);
+  for (i = 0; i < picks.length; i++) body.push({ t: statusLine(picks[i]) });
+
+  var jokes = shuffle(JOKES.slice()).slice(0, 2);
+  for (i = 0; i < jokes.length; i++){
+    var at = 1 + Math.floor(Math.random() * (body.length - 1));
+    body.splice(at, 0, { t: statusLine(jokes[i]), hi:true });
   }
-  var jokes = shuffle(JOKES.slice()).slice(0, 5);
-  for (var j = 0; j < jokes.length; j++){
-    var at = 5 + Math.floor(Math.random() * (out.length - 8));
-    out.splice(at, 0, { t: jokes[j], hi:true });
-  }
+  for (i = 0; i < body.length; i++) out.push(body[i]);
+
   out.push({ t:"" });
-  out.push({ t:"OPERATOR: FINN     CLEARANCE: MAXIMUM", hi:true });
+  out.push({ t:"OPERATOR: FINN   CLEARANCE: MAX", hi:true });
   out.push({ t:"STATUS: READY", hi:true });
   return out;
 }
@@ -1879,21 +1836,43 @@ bootEl.onclick = function(){
   else showQuote();
 };
 
-var li = 0;
-var lineTimer = setInterval(function(){
-  if (li < LINES.length){
-    var L = LINES[li];
-    logEl.innerHTML += (L.hi ? "<i>" + esc(L.t) + "</i>" : esc(L.t)) + "\n";
-    li++;
+var TOTAL_MS = 6700, LINE_PAUSE = 170;
+var li = 0, ci = 0, doneHtml = "", typeTimer = null;
+
+var charCount = 0;
+for (var ln = 0; ln < LINES.length; ln++) charCount += LINES[ln].t.length;
+var perChar = (TOTAL_MS - LINES.length * LINE_PAUSE) / Math.max(1, charCount);
+if (perChar < 6) perChar = 6;
+
+function wrapLine(L, text){
+  return L.hi ? "<i>" + esc(text) + "</i>" : esc(text);
+}
+function paintBoot(){
+  var cur = li < LINES.length ? wrapLine(LINES[li], LINES[li].t.slice(0, ci)) : "";
+  logEl.innerHTML = doneHtml + cur + "<u>_</u>";
+}
+function step(){
+  if (li >= LINES.length){ showQuote(); return; }
+  var L = LINES[li];
+  if (ci < L.t.length){
+    ci++;
+    paintBoot();
+    typeTimer = setTimeout(step, perChar);
+  } else {
+    doneHtml += wrapLine(L, L.t) + "\n";
+    li++; ci = 0;
+    paintBoot();
+    typeTimer = setTimeout(step, LINE_PAUSE);
   }
-  if (li >= LINES.length){ clearInterval(lineTimer); showQuote(); }
-}, 34);
+}
+paintBoot();
+typeTimer = setTimeout(step, 260);
 
 var quoteShown = false;
 function showQuote(){
   if (quoteShown) return;
   quoteShown = true;
-  clearInterval(lineTimer);
+  clearTimeout(typeTimer);
   var q = pickQuote();
   paint(q[0], q[1]);
   quoteEl.className = "on";
