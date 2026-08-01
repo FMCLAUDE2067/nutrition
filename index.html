@@ -152,6 +152,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 /* ---------- modal ---------- */
 .modal{position:absolute;inset:0;background:rgba(0,0,0,.88);z-index:40;display:none;padding:16px;overflow-y:auto}
 .modal.on{display:block}
+#editModal{z-index:50}
 .sheet{border:1px solid var(--grn);background:var(--bg);padding:12px}
 .sheet h3{font-size:12px;font-weight:400;letter-spacing:.12em;color:var(--grn-fade);margin-bottom:11px;display:flex;justify-content:space-between;align-items:center}
 .fld{margin-bottom:8px}
@@ -444,7 +445,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 (function(){
 "use strict";
 
-var VERSION = "1.5.0";
+var VERSION = "1.5.1";
 var KJ = 4.184;
 var KEY = "fnt_v1";
 var CFGKEY = "fnt_sync";
