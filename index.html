@@ -48,9 +48,10 @@ body{
 }
 
 /* ---------- boot ---------- */
-#boot{position:absolute;inset:0;background:#000;z-index:60;padding:14px;font-size:12px;line-height:1.45;overflow:hidden;cursor:pointer}
-#bootlog{white-space:pre-wrap;color:var(--grn-dim)}
+#boot{position:absolute;inset:0;background:#000;z-index:60;padding:10px;overflow:hidden;cursor:pointer;display:flex;flex-direction:column;justify-content:flex-end}
+#bootlog{white-space:pre-wrap;color:var(--grn-fade);font-size:11px;line-height:1.22;word-break:break-all}
 #bootlog b{color:var(--grn);font-weight:400}
+#bootlog i{color:var(--grn);font-style:normal}
 #quote{position:absolute;inset:0;display:none;flex-direction:column;justify-content:center;padding:28px 22px;background:#000}
 #quote.on{display:flex}
 #qtext{font-size:15px;line-height:1.6;color:var(--grn)}
@@ -317,7 +318,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
           <div class="fld"><label>FIBRE g</label><input type="number" id="fB" inputmode="decimal" placeholder="opt"></div>
         </div>
         <label style="font-size:11px;display:flex;gap:7px;align-items:center;margin:4px 0 9px">
-          <input type="checkbox" id="fSave" checked style="width:auto;accent-color:#3dff6e"> save to my foods
+          <input type="checkbox" id="fSave" style="width:auto;accent-color:#3dff6e"> save to my foods
         </label>
       </div>
 
@@ -365,6 +366,15 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
       <h3><span>SCAN BARCODE</span><button class="btn sm" id="scanX">CANCEL</button></h3>
       <div id="reader" style="width:100%;min-height:180px;border:1px solid var(--line-faint)"></div>
       <div class="hint" id="scanMsg">Point the camera at the barcode.</div>
+
+      <div style="margin-top:9px">
+        <div class="fld"><label>OR TYPE THE NUMBER</label>
+          <div style="display:flex;gap:5px">
+            <input type="text" id="manIn" inputmode="numeric" placeholder="9300675024235" autocomplete="off">
+            <button class="btn" id="manGo" style="flex:0 0 72px">LOOK UP</button>
+          </div>
+        </div>
+      </div>
 
       <div id="gramsPane" style="display:none;margin-top:11px">
         <div style="font-size:12px;margin-bottom:9px" id="prodName"></div>
@@ -445,7 +455,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 (function(){
 "use strict";
 
-var VERSION = "1.5.1";
+var VERSION = "1.7.0";
 var KJ = 4.184;
 var KEY = "fnt_v1";
 var CFGKEY = "fnt_sync";
@@ -753,7 +763,7 @@ function openFood(){
   picked = null; pickedPrep = null; scanned = null;
   $("fName").value = ""; $("fCal").value = ""; $("fG").value = "";
   $("fP").value = ""; $("fC").value = ""; $("fF").value = ""; $("fB").value = "";
-  $("fSave").checked = true;
+  $("fSave").checked = false;
   setUnit(false);
   $("foodTitle").textContent = "ADD FOOD";
   $("favSearch").value = "";
@@ -1309,12 +1319,24 @@ function closeScan(){
 }
 $("scanX").onclick = closeScan;
 
+$("manGo").onclick = function(){
+  var code = $("manIn").value.replace(/[^0-9]/g, "");
+  if (code.length < 6 || code.length > 14){
+    setScanMsg("A barcode is usually 8 to 13 digits. Check the number and try again.", true);
+    flash($("manIn"));
+    return;
+  }
+  $("manIn").value = "";
+  onScan(code);
+};
+$("manIn").onkeydown = function(e){ if (e.key === "Enter") $("manGo").onclick(); };
+
 $("scanBtn").onclick = function(){
   $("scanModal").className = "modal on";
   $("gramsPane").style.display = "none";
   setScanMsg("Loading scanner...", false);
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
-    setScanMsg("This browser will not give the page camera access. Note the numbers off the label and use the form instead.", true);
+    setScanMsg("No camera access in this browser. Type the barcode number below instead.", true);
     return;
   }
   loadLib().then(function(){
@@ -1557,7 +1579,100 @@ document.addEventListener("visibilitychange", function(){
 window.addEventListener("online", function(){ if (connected()) sync(true); });
 
 /* ---------- boot ---------- */
-var FALLBACK = [
+var QKEY = "fnt_q";
+var QUOTES = {
+
+itysl: [
+["We're all trying to find the guy who did this.","I Think You Should Leave"],
+["You sure about that?","I Think You Should Leave"],
+["The bones are their money.","I Think You Should Leave"],
+["I don't even want to be around anymore.","Karl Havoc, I Think You Should Leave"],
+["Nobody's pulling the shirt!","TC Tuggers, I Think You Should Leave"],
+["55 burgers, 55 fries, 55 tacos, 55 pies, 55 cokes, 100 tater tots.","I Think You Should Leave"],
+["The shirts are expensive because the patterns are so complicated.","Dan Flashes, I Think You Should Leave"],
+["We're doing sloppy steaks at Truffoni's.","I Think You Should Leave"]
+],
+
+chair: [
+["Don't tell anybody my wheelbarrow is outside. It's an indoor wheelbarrow.","The Chair Company"],
+["Ooh, that fuckin' egg!","The Chair Company"],
+["People make garbage, and you can't talk to anybody. You can't complain, you can't get an apology. I wanna scream at 'em.","Ron, The Chair Company"],
+["Shut up, Barb!","Ron, The Chair Company"],
+["Do you know if these porno pictures are connected to anything bigger than porn?","Ron, The Chair Company"]
+],
+
+curb: [
+["Pretty, pretty, pretty good.","Larry David, Curb Your Enthusiasm"],
+["I don't want to have a stop and chat.","Larry David, Curb Your Enthusiasm"],
+["You know who wears sunglasses inside? Blind people and assholes.","Larry David, Curb Your Enthusiasm"],
+["I'm a social assassin.","Larry David, Curb Your Enthusiasm"],
+["That's a chat and cut. You chatted and you cut.","Curb Your Enthusiasm"],
+["Respect the wood!","Curb Your Enthusiasm"]
+],
+
+cali: [
+["I've lost a lot of battles, but I've never lost sight of the war. No retreat, baby. No surrender.","Hank Moody, Californication"],
+["I could chalk it up to fear and self-loathing in Los Angeles, but the truth is I'm trying to grow the fuck up for once.","Hank Moody, Californication"],
+["She was the best thing that ever happened to me, and I fucked it up again and again and again.","Hank Moody, Californication"],
+["I can't keep apologising for something I can't change. All I can do is keep moving forward.","Hank Moody, Californication"],
+["Loving you has been the most profound, intense, painful experience of my life.","Hank Moody, Californication"]
+],
+
+blade: [
+["All those moments will be lost in time, like tears in rain. Time to die.","Roy Batty, Blade Runner"],
+["I've seen things you people wouldn't believe. Attack ships on fire off the shoulder of Orion.","Roy Batty, Blade Runner"],
+["It's too bad she won't live. But then again, who does?","Gaff, Blade Runner"],
+["More human than human is our motto.","Tyrell, Blade Runner"],
+["Wake up. Time to die.","Leon, Blade Runner"],
+["Dying for the right cause is the most human thing we can do.","Freysa, Blade Runner 2049"],
+["Sometimes to love someone, you got to be a stranger.","Deckard, Blade Runner 2049"],
+["You've never seen a miracle.","Sapper Morton, Blade Runner 2049"]
+],
+
+inter: [
+["Do not go gentle into that good night. Rage, rage against the dying of the light.","Interstellar"],
+["We used to look up at the sky and wonder at our place in the stars. Now we just look down and worry about our place in the dirt.","Cooper, Interstellar"],
+["Mankind was born on Earth. It was never meant to die here.","Cooper, Interstellar"],
+["Love is the one thing we're capable of perceiving that transcends dimensions of time and space.","Brand, Interstellar"],
+["We're still pioneers. We've barely begun.","Cooper, Interstellar"],
+["What's your trust setting, TARS? Lower than yours, apparently.","Interstellar"]
+],
+
+tron: [
+["End of line.","Master Control Program, Tron"],
+["Greetings, programs!","Tron"],
+["I fight for the Users.","Tron"],
+["The Grid. A digital frontier.","Kevin Flynn, Tron: Legacy"],
+["It's bio-digital jazz, man.","Kevin Flynn, Tron: Legacy"],
+["You're messing with my Zen thing, man.","Kevin Flynn, Tron: Legacy"]
+],
+
+toast: [
+["Yes, I can hear you, Clem Fandango.","Steven Toast, Toast of London"],
+["Toast! I thought I could smell cheap aftershave and bullshit.","Ray Purchase, Toast of London"],
+["Fuck off! It's just me saying the words!","Steven Toast, Toast of London"],
+["Hi Steven, this is Clem Fandango. Can you hear me?","Toast of London"]
+],
+
+mind: [
+["There's nothing behind Kemper's eyes. It's like standing near a black hole.","Bill Tench, Mindhunter"],
+["How do we get ahead of crazy if we don't know how crazy thinks?","Bill Tench, Mindhunter"],
+["Crazy in the way that anyone with a truly new idea is crazy.","Wendy Carr, Mindhunter"],
+["Cops like me because they can talk to me more than they can talk to their own wives.","Ed Kemper, Mindhunter"]
+],
+
+got: [
+["When you play the game of thrones, you win or you die. There is no middle ground.","Cersei Lannister, Game of Thrones"],
+["Chaos isn't a pit. Chaos is a ladder.","Petyr Baelish, Game of Thrones"],
+["Never forget what you are. Wear it like armour and it can never be used to hurt you.","Tyrion Lannister, Game of Thrones"],
+["I drink and I know things.","Tyrion Lannister, Game of Thrones"],
+["The night is dark and full of terrors.","Melisandre, Game of Thrones"],
+["Power resides where men believe it resides.","Varys, Game of Thrones"],
+["A Lannister always pays his debts.","Game of Thrones"],
+["Winter is coming.","Game of Thrones"]
+],
+
+phil: [
   ["The impediment to action advances action. What stands in the way becomes the way.","Marcus Aurelius"],
   ["He who has a why to live can bear almost any how.","Friedrich Nietzsche"],
   ["We suffer more often in imagination than in reality.","Seneca"],
@@ -1598,23 +1713,159 @@ var FALLBACK = [
   ["Comfort is a slow death.","Anon"],
   ["What we do now echoes in eternity.","Marcus Aurelius"],
   ["Begin at once to live, and count each separate day as a separate life.","Seneca"]
+]
+
+};
+
+function pickQuote(){
+  var s = {};
+  try { s = JSON.parse(localStorage.getItem(QKEY)) || {}; } catch(e){}
+  if (typeof s.last !== "string") s.last = "";
+  if (!Array.isArray(s.seen)) s.seen = [];
+
+  var fams = [], k;
+  for (k in QUOTES) if (k !== s.last && QUOTES[k].length) fams.push(k);
+  if (!fams.length) for (k in QUOTES) fams.push(k);
+  var fam = fams[Math.floor(Math.random() * fams.length)];
+
+  var pool = QUOTES[fam], fresh = [];
+  for (var i = 0; i < pool.length; i++){
+    if (s.seen.indexOf(pool[i][0]) < 0) fresh.push(pool[i]);
+  }
+  if (!fresh.length) fresh = pool;
+  var q = fresh[Math.floor(Math.random() * fresh.length)];
+
+  s.last = fam;
+  s.seen.push(q[0]);
+  while (s.seen.length > 14) s.seen.shift();
+  try { localStorage.setItem(QKEY, JSON.stringify(s)); } catch(e){}
+  return q;
+}
+
+var BLOCKS = [
+[ "static void groups_sort(struct group_info *group_info)",
+  "{",
+  "  int base, max, stride;",
+  "  int gidsetsize = group_info->ngroups;",
+  "  for (stride = 1; stride < gidsetsize; stride = 3 * stride + 1)",
+  "    ; /* nothing */",
+  "  stride /= 3;",
+  "  while (stride) {",
+  "    max = gidsetsize - stride;",
+  "    for (base = 0; base < max; base++) {",
+  "      int left = base, right = left + stride;",
+  "      gid_t tmp = GROUP_AT(group_info, right);",
+  "      while (left >= 0 && GROUP_AT(group_info, left) > tmp) {",
+  "        GROUP_AT(group_info, right) = GROUP_AT(group_info, left);",
+  "        right = left; left -= stride;",
+  "      }",
+  "      GROUP_AT(group_info, right) = tmp;",
+  "    }",
+  "    stride /= 3;",
+  "  }",
+  "}" ],
+[ "  unsigned int nblocks = cp_count * sizeof(**grouplist);",
+  "  if (copy_from_user(group_info->blocks[i], grouplist, len))",
+  "    return -EFAULT;",
+  "  grouplist += NGROUPS_PER_BLOCK;",
+  "  count -= cp_count;",
+  "  return 0;" ],
+[ "0x7ffd4a2b  48 89 e5 41 57 41 56 41  55 41 54 53 48 81 ec 98",
+  "0x7ffd4a3b  00 00 00 64 48 8b 04 25  28 00 00 00 48 89 45 c8",
+  "0x7ffd4a4b  31 c0 48 8d 7d 90 e8 3f  fe ff ff 85 c0 0f 85 a1",
+  "0x7ffd4a5b  02 00 00 48 8b 75 90 48  8d 7d a0 e8 2c ff ff ff" ],
+[ "[    0.000000] Linux version 4.4.12 (arm-unknown-linux-androideabi)",
+  "[    0.000341] Initializing cgroup subsys cpuset",
+  "[    0.000598] Initializing cgroup subsys cpuacct",
+  "[    0.001204] CPU: div instructions available, disabling emulation",
+  "[    0.002877] Memory policy: Data cache writealloc",
+  "[    0.014502] Built 1 zonelists in Zone order, mobility grouping on" ],
+[ "$ nmap -sS -O 10.0.0.0/24",
+  "Starting Nmap 7.94 ( https://nmap.org )",
+  "Host is up (0.00021s latency).",
+  "PORT     STATE SERVICE     VERSION",
+  "22/tcp   open  ssh         OpenSSH 8.9p1",
+  "443/tcp  open  ssl/http    nginx 1.24.0",
+  "9001/tcp open  nutrition   RobCo Terminal Link" ],
+[ "  if (unlikely(!access_ok(VERIFY_READ, buf, count)))",
+  "    goto out_free;",
+  "  spin_lock_irqsave(&dev->lock, flags);",
+  "  list_for_each_entry_safe(pos, n, &dev->queue, list) {",
+  "    if (atomic_dec_and_test(&pos->refcount))",
+  "      kfree_rcu(pos, rcu);",
+  "  }",
+  "  spin_unlock_irqrestore(&dev->lock, flags);" ],
+[ "$ ./decrypt --target vault --keyspace 2^128",
+  "[+] handshake complete",
+  "[+] rotating keyspace ......... 24%",
+  "[+] rotating keyspace ......... 71%",
+  "[+] rotating keyspace ......... 98%",
+  "[+] access granted" ],
+[ "  while (left >= 0 && GROUP_AT(group_info, left) > tmp) {",
+  "    GROUP_AT(group_info, right) = GROUP_AT(group_info, left);",
+  "    right = left;",
+  "    left -= stride;",
+  "  }",
+  "  return -ENOMEM;" ]
 ];
 
-var LINES = [
-  "*** ROBCO INDUSTRIES UNIFIED OPERATING SYSTEM ***",
-  "COPYRIGHT 2075-2077 ROBCO INDUSTRIES",
-  "-SERVER 6- TERM v" + VERSION,
-  "",
-  "INITIALISING NUTRITION SUBSYSTEM...",
-  "MOUNTING LOCAL DATASTORE......... <b>OK</b>",
-  "CHECKING MACRONUTRIENT INDEX..... <b>OK</b>",
-  "CALIBRATING HYDRATION SENSOR..... <b>OK</b>",
-  "LOADING TRAINING LOG............. <b>OK</b>",
-  "",
-  "OPERATOR: VAULT DWELLER",
-  "STATUS: <b>READY</b>",
-  ""
+var JOKES = [
+  "[    1.337000] finn.ko: loaded, absolute unit detected",
+  "auth: FINN IS THE BEST — signature valid, 4096-bit",
+  "kernel: finn is a fucking beast. no further action required.",
+  "warning: protein intake exceeded double precision, widening to int128",
+  "[    0.420000] benchpress.ko: plates mounted read-only, spotter not found",
+  "sudo: finn is not in the sudoers file. he owns the machine.",
+  "nice -n -20 finn   # cannot be deprioritised",
+  "[    2.048000] gym_streak: counter overflowed, promoting to int64",
+  "fsck: 1 absolute unit found, 0 errors, 0 excuses",
+  "TODO: nerf finn (deferred indefinitely)",
+  "ping finn.local: 0% packet loss, 0.001ms, he was already there",
+  "chmod 777 /gains   # permission denied to everyone else",
+  "[    3.141592] cardio.service failed to start (masked by user finn)",
+  "git blame carbs.c → author: definitely not finn",
+  "[    0.911000] dinner.socket: address already in use",
+  "segfault in module leg_day, core dumped, so did finn",
+  "[    4.096000] mirror.sys: reflection confirmed jacked",
+  "cron: 0 4 * * * /usr/bin/finn --outwork everyone"
 ];
+
+function shuffle(a){
+  for (var i = a.length - 1; i > 0; i--){
+    var j = Math.floor(Math.random() * (i + 1)), t = a[i];
+    a[i] = a[j]; a[j] = t;
+  }
+  return a;
+}
+function buildBoot(){
+  var out = [
+    { t:"*** ROBCO INDUSTRIES UNIFIED OPERATING SYSTEM ***", hi:true },
+    { t:"COPYRIGHT 2075-2077 ROBCO INDUSTRIES", hi:true },
+    { t:"-SERVER 6- TERM v" + VERSION, hi:true },
+    { t:"" }
+  ];
+  var blocks = shuffle(BLOCKS.slice());
+  var bi = 0;
+  while (out.length < 72){
+    var blk = blocks[bi % blocks.length];
+    bi++;
+    for (var i = 0; i < blk.length; i++) out.push({ t: blk[i] });
+    out.push({ t:"" });
+  }
+  var jokes = shuffle(JOKES.slice()).slice(0, 5);
+  for (var j = 0; j < jokes.length; j++){
+    var at = 5 + Math.floor(Math.random() * (out.length - 8));
+    out.splice(at, 0, { t: jokes[j], hi:true });
+  }
+  out.push({ t:"" });
+  out.push({ t:"OPERATOR: FINN     CLEARANCE: MAXIMUM", hi:true });
+  out.push({ t:"STATUS: READY", hi:true });
+  return out;
+}
+var LINES = buildBoot();
+function esc(s){
+  return s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 var bootEl = $("boot"), logEl = $("bootlog"), quoteEl = $("quote");
 var done = false;
@@ -1630,39 +1881,29 @@ bootEl.onclick = function(){
 
 var li = 0;
 var lineTimer = setInterval(function(){
-  if (li >= LINES.length){ clearInterval(lineTimer); showQuote(); return; }
-  logEl.innerHTML += LINES[li] + "\n";
-  li++;
-}, 145);
+  if (li < LINES.length){
+    var L = LINES[li];
+    logEl.innerHTML += (L.hi ? "<i>" + esc(L.t) + "</i>" : esc(L.t)) + "\n";
+    li++;
+  }
+  if (li >= LINES.length){ clearInterval(lineTimer); showQuote(); }
+}, 34);
 
-var quoteShown = false, live = null;
+var quoteShown = false;
 function showQuote(){
   if (quoteShown) return;
   quoteShown = true;
   clearInterval(lineTimer);
-  if (live) paint(live[0], live[1]);
-  else {
-    var fb = FALLBACK[Math.floor(Math.random() * FALLBACK.length)];
-    paint(fb[0], fb[1]);
-  }
+  var q = pickQuote();
+  paint(q[0], q[1]);
   quoteEl.className = "on";
 }
 function paint(text, author){
-  $("qtext").textContent = "“" + text + "”";
+  var el = $("qtext");
+  el.textContent = "“" + text + "”";
+  el.style.fontSize = text.length > 150 ? "13px" : (text.length > 90 ? "14px" : "16px");
   $("qauth").textContent = "— " + author;
 }
-function fetchQuote(){
-  if (typeof fetch !== "function" || typeof AbortController !== "function") return;
-  var ctl = new AbortController();
-  var to = setTimeout(function(){ ctl.abort(); }, 1500);
-  fetch("https://api.quotable.io/random?minLength=40&maxLength=150&tags=wisdom|courage|perseverance|philosophy", { signal: ctl.signal })
-    .then(function(res){ return res.ok ? res.json() : null; })
-    .then(function(j){
-      clearTimeout(to);
-      if (j && j.content && j.author && !quoteShown) live = [j.content, j.author];
-    })["catch"](function(){ clearTimeout(to); });
-}
-fetchQuote();
 
 try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){}
 render();
