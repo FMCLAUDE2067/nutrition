@@ -150,6 +150,12 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 #avgs{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px;margin-top:11px;font-size:calc(11px*var(--fs))}
 #avgs div{display:flex;justify-content:space-between;border-bottom:1px solid var(--line-faint);padding-bottom:3px}
 #avgs b{font-weight:400;color:var(--grn)}
+.srow{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+.srow:last-child{margin-bottom:0}
+.slab{width:calc(96px*var(--fs));flex:0 0 auto;font-size:calc(10px*var(--fs));color:var(--grn-fade);letter-spacing:.03em;white-space:nowrap}
+.sbar{flex:1 1 auto;min-width:0;height:7px;background:var(--line-faint);display:block}
+.sbar i{display:block;height:100%;background:var(--grn);width:0}
+.sval{width:calc(36px*var(--fs));flex:0 0 auto;text-align:right;font-size:calc(10px*var(--fs))}
 #avgs span{color:var(--grn-fade)}
 
 /* ---------- modal ---------- */
@@ -272,6 +278,12 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
     </div>
 
     <div class="card">
+      <div class="hd">SLOP METER <span id="slopNote"></span></div>
+      <div id="slopBars"></div>
+      <div class="hint" id="slopAdds"></div>
+    </div>
+
+    <div class="card">
       <div class="hd">LAST 7 DAYS</div>
       <div id="chart"><div id="tline"></div></div>
       <div id="xax"></div>
@@ -304,6 +316,14 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
       <div id="paneNew" style="display:none">
         <button class="btn full" id="scanBtn" style="margin-bottom:9px">SCAN BARCODE</button>
         <div class="fld"><label>NAME</label><input type="text" id="fName" placeholder="chicken breast"></div>
+        <div class="fld"><label>FOOD TYPE</label>
+          <div class="g4" id="novaRow">
+            <button class="btn sm on" data-n="1">WHOLE</button>
+            <button class="btn sm" data-n="2">BASIC</button>
+            <button class="btn sm" data-n="3">PROC</button>
+            <button class="btn sm" data-n="4">SLOP</button>
+          </div>
+        </div>
         <div class="fld"><label>WEIGHT OF THIS AMOUNT (g)</label><input type="number" id="fG" inputmode="numeric" placeholder="150"></div>
         <div class="fld">
           <label>ENERGY FOR THAT WEIGHT</label>
@@ -340,6 +360,14 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
     <div class="sheet">
       <h3><span id="editTitle">EDIT</span><button class="btn sm" id="editX">CLOSE</button></h3>
       <div class="fld"><label>NAME</label><input type="text" id="eName"></div>
+      <div class="fld"><label>FOOD TYPE</label>
+        <div class="g4" id="eNovaRow">
+          <button class="btn sm on" data-n="1">WHOLE</button>
+          <button class="btn sm" data-n="2">BASIC</button>
+          <button class="btn sm" data-n="3">PROC</button>
+          <button class="btn sm" data-n="4">SLOP</button>
+        </div>
+      </div>
       <div class="fld"><label>SERVING WEIGHT (g)</label><input type="number" id="eG" inputmode="numeric" placeholder="100"></div>
       <div class="fld">
         <label>ENERGY FOR THAT WEIGHT</label>
@@ -465,7 +493,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 (function(){
 "use strict";
 
-var VERSION = "1.8.0";
+var VERSION = "1.9.2";
 var KJ = 4.184;
 var KEY = "fnt_v1";
 var CFGKEY = "fnt_sync";
@@ -495,10 +523,14 @@ function normalise(d){
   for (i = 0; i < d.favourites.length; i++){
     if (typeof d.favourites[i].ts !== "number") d.favourites[i].ts = 0;
     if (typeof d.favourites[i].g !== "number" || d.favourites[i].g <= 0) d.favourites[i].g = null;
+    if (!(d.favourites[i].nova >= 1 && d.favourites[i].nova <= 4)) d.favourites[i].nova = null;
+    if (!Array.isArray(d.favourites[i].adds)) d.favourites[i].adds = [];
   }
   for (i = 0; i < d.preps.length; i++){
     if (typeof d.preps[i].ts !== "number") d.preps[i].ts = 0;
     if (typeof d.preps[i].g !== "number" || d.preps[i].g <= 0) d.preps[i].g = null;
+    if (!(d.preps[i].nova >= 1 && d.preps[i].nova <= 4)) d.preps[i].nova = 1;
+    if (!Array.isArray(d.preps[i].adds)) d.preps[i].adds = [];
   }
   if (!d.days || typeof d.days !== "object") d.days = {};
   for (var dk in d.days){
@@ -534,6 +566,34 @@ function toCal(v, isKj){ return isKj ? v / KJ : v; }
 function save(){
   try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){}
   queuePush();
+}
+
+var NOVA = ["", "WHOLE", "BASIC", "PROCESSED", "SLOP"];
+
+var BADADD = {
+ e102:"tartrazine", e104:"quinoline yellow", e110:"sunset yellow", e122:"carmoisine",
+ e124:"ponceau 4R", e127:"erythrosine", e129:"allura red", e131:"patent blue",
+ e132:"indigotine", e133:"brilliant blue", e142:"green S", e150c:"caramel III",
+ e150d:"caramel IV", e151:"brilliant black", e155:"brown HT", e171:"titanium dioxide",
+ e210:"benzoic acid", e211:"sodium benzoate", e212:"potassium benzoate",
+ e220:"sulphur dioxide", e221:"sodium sulphite", e223:"sodium metabisulphite",
+ e249:"potassium nitrite", e250:"sodium nitrite", e251:"sodium nitrate", e252:"potassium nitrate",
+ e310:"propyl gallate", e319:"TBHQ", e320:"BHA", e321:"BHT",
+ e338:"phosphoric acid", e407:"carrageenan",
+ e432:"polysorbate 20", e433:"polysorbate 80", e466:"carboxymethylcellulose",
+ e621:"MSG", e627:"disodium guanylate", e631:"disodium inosinate", e635:"ribonucleotides",
+ e900:"dimethylpolysiloxane", e924:"potassium bromate",
+ e950:"acesulfame K", e951:"aspartame", e952:"cyclamate", e954:"saccharin",
+ e955:"sucralose", e961:"neotame", e962:"aspartame-acesulfame"
+};
+function badAdditives(tags){
+  var out = [];
+  if (!tags || !tags.length) return out;
+  for (var i = 0; i < tags.length; i++){
+    var code = String(tags[i]).replace(/^[a-z]{2}:/, "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    if (BADADD[code] && out.indexOf(BADADD[code]) < 0) out.push(BADADD[code]);
+  }
+  return out;
 }
 
 var UIKEY = "fnt_ui";
@@ -664,6 +724,7 @@ function render(){
 
   $("logTot").textContent = r(t.cal) + " CAL";
   renderLog(d);
+  renderSlop();
   renderChart();
 }
 
@@ -717,6 +778,63 @@ function renderLog(d){
     wrap.appendChild(row);
   });
   box.appendChild(wrap);
+}
+
+function slopStats(k){
+  var d = day(k), s = { total:d.items.length, rated:0, unrated:0, n:[0,0,0,0,0], withAdd:0, adds:[] };
+  for (var i = 0; i < d.items.length; i++){
+    var it = d.items[i];
+    if (it.nova >= 1 && it.nova <= 4){ s.n[it.nova]++; s.rated++; }
+    else s.unrated++;
+    if (Array.isArray(it.adds) && it.adds.length){
+      s.withAdd++;
+      for (var j = 0; j < it.adds.length; j++){
+        if (s.adds.indexOf(it.adds[j]) < 0) s.adds.push(it.adds[j]);
+      }
+    }
+  }
+  return s;
+}
+
+function renderSlop(){
+  var s = slopStats(viewDate), box = $("slopBars");
+  box.textContent = "";
+  $("slopNote").textContent = s.total ? (s.unrated ? s.unrated + " UNRATED" : "") : "";
+
+  var rows = [
+    ["WHOLE", s.n[1], false],
+    ["BASIC", s.n[2], false],
+    ["PROCESSED", s.n[3], false],
+    ["STRAIGHT WTF!!!", s.n[4], true],
+    ["ADDITIVES", s.withAdd, true]
+  ];
+  rows.forEach(function(row){
+    var pct = s.total ? (row[1] / s.total) * 100 : 0;
+    var wrap = document.createElement("div");
+    wrap.className = "srow";
+    var lab = document.createElement("span");
+    lab.className = "slab";
+    lab.textContent = row[0];
+    if (row[2] && row[1] > 0) lab.style.color = "var(--warn)";
+    var bar = document.createElement("span");
+    bar.className = "sbar";
+    var fill = document.createElement("i");
+    fill.style.width = Math.max(0, Math.min(100, pct)) + "%";
+    if (row[2]) fill.style.background = "var(--warn)";
+    bar.appendChild(fill);
+    var val = document.createElement("span");
+    val.className = "sval";
+    val.textContent = r(pct) + "%";
+    if (row[2] && row[1] > 0) val.style.color = "var(--warn)";
+    wrap.appendChild(lab); wrap.appendChild(bar); wrap.appendChild(val);
+    box.appendChild(wrap);
+  });
+
+  var el = $("slopAdds");
+  if (!s.total) el.textContent = "Nothing logged yet.";
+  else if (!s.adds.length) el.textContent = "No flagged additives today.";
+  else el.textContent = s.adds.join(" · ");
+  el.style.color = s.adds.length ? "var(--warn)" : "var(--grn-fade)";
 }
 
 function renderChart(){
@@ -793,11 +911,30 @@ function renderAvgs(){
 
 /* ---------- food modal ---------- */
 var picked = null, pickedPrep = null, kjMode = false, scanned = null;
+var novaPick = 1, eNovaPick = 1, scannedAdds = [];
+
+function bindNova(rowId, get, set){
+  var bs = document.getElementById(rowId).querySelectorAll(".btn");
+  for (var i = 0; i < bs.length; i++){
+    (function(b){
+      b.onclick = function(){ set(parseInt(b.getAttribute("data-n"), 10)); paintNova(rowId, get()); };
+    })(bs[i]);
+  }
+}
+function paintNova(rowId, v){
+  var bs = document.getElementById(rowId).querySelectorAll(".btn");
+  for (var i = 0; i < bs.length; i++){
+    bs[i].className = "btn sm" + (parseInt(bs[i].getAttribute("data-n"), 10) === v ? " on" : "");
+  }
+}
+bindNova("novaRow", function(){ return novaPick; }, function(v){ novaPick = v; });
+bindNova("eNovaRow", function(){ return eNovaPick; }, function(v){ eNovaPick = v; });
 
 function sel(){ return pickedPrep || picked; }
 
 function openFood(){
-  picked = null; pickedPrep = null; scanned = null;
+  picked = null; pickedPrep = null; scanned = null; scannedAdds = [];
+  novaPick = 1; paintNova("novaRow", 1);
   $("fName").value = ""; $("fCal").value = ""; $("fG").value = "";
   $("fP").value = ""; $("fC").value = ""; $("fF").value = ""; $("fB").value = "";
   $("fSave").checked = false;
@@ -938,7 +1075,9 @@ function commitFood(){
       name: src.name, g: g, t: nowHM(),
       cal: num(src.cal) * k,
       p: scaleBy(src.p, k), c: scaleBy(src.c, k),
-      f: scaleBy(src.f, k), b: scaleBy(src.b, k)
+      f: scaleBy(src.f, k), b: scaleBy(src.b, k),
+      nova: src.nova || null,
+      adds: (src.adds || []).slice()
     };
   } else {
     var name = $("fName").value.trim(), raw = parseFloat($("fCal").value), ng = parseFloat($("fG").value);
@@ -947,10 +1086,12 @@ function commitFood(){
     var cal = toCal(raw, kjMode);
     item = {
       name: name, g: ng, t: nowHM(), cal: cal,
-      p: optNum($("fP")), c: optNum($("fC")), f: optNum($("fF")), b: optNum($("fB"))
+      p: optNum($("fP")), c: optNum($("fC")), f: optNum($("fF")), b: optNum($("fB")),
+      nova: novaPick, adds: scannedAdds.slice()
     };
     if ($("fSave").checked){
-      var fav = { id:newId(), name:name, g:ng, cal:cal, p:item.p, c:item.c, f:item.f, b:item.b, ts:Date.now() };
+      var fav = { id:newId(), name:name, g:ng, cal:cal, p:item.p, c:item.c, f:item.f, b:item.b,
+                  nova:novaPick, adds:scannedAdds.slice(), ts:Date.now() };
       if (scanned) fav.barcode = scanned;
       db.favourites.push(fav);
       db.favourites.sort(function(a,b){ return a.name.localeCompare(b.name); });
@@ -1260,6 +1401,8 @@ function openEdit(item, kind){
   setEUnit(false);
   $("editTitle").textContent = kind === "prep" ? "EDIT MEAL PREP" : "EDIT FOOD";
   $("eName").value = item.name;
+  eNovaPick = (item.nova >= 1 && item.nova <= 4) ? item.nova : 1;
+  paintNova("eNovaRow", eNovaPick);
   $("eG").value = item.g ? r(item.g) : "";
   $("eCal").value = r(num(item.cal));
   $("eP").value = blank(item.p) ? "" : r1(num(item.p));
@@ -1282,6 +1425,7 @@ $("editSave").onclick = function(){
   if (!name || !isFinite(raw)){ setEditMsg("A name and an energy value are required.", true); return; }
   if (!isFinite(g) || g <= 0){ setEditMsg("Enter the serving weight in grams.", true); return; }
   editing.name = name;
+  editing.nova = eNovaPick;
   editing.g = g;
   editing.cal = toCal(raw, eKj);
   editing.p = optNum($("eP")); editing.c = optNum($("eC"));
@@ -1403,6 +1547,8 @@ function onScan(text){
   }
   var code = String(text).trim();
   scanned = code;
+  novaPick = 3;
+  paintNova("novaRow", 3);
   setScanMsg("Found " + code + ", looking it up...", false);
 
   var localHit = null;
@@ -1418,7 +1564,10 @@ function onScan(text){
       renderFavs(); syncGramsRow();
       setFoodMsg("Matched " + localHit.name + " from your saved foods. Set the grams.", false);
     } else {
+      scannedAdds = (localHit.adds || []).slice();
+      novaPick = localHit.nova || 1;
       fillForm(localHit.name, localHit.g, localHit.cal, localHit.p, localHit.c, localHit.f, localHit.b);
+      paintNova("novaRow", novaPick);
       setFoodMsg("Matched " + localHit.name + ", but it has no serving weight. Fill in the grams.", true);
     }
     return;
@@ -1428,7 +1577,7 @@ function onScan(text){
 
 function lookup(code){
   var url = "https://world.openfoodfacts.org/api/v2/product/" + encodeURIComponent(code) +
-            ".json?fields=product_name,brands,serving_size,nutriments";
+            ".json?fields=product_name,brands,serving_size,nutriments,nova_group,additives_tags";
   fetch(url).then(function(res){
     if (!res.ok) throw new Error("lookup failed, HTTP " + res.status);
     return res.json();
@@ -1441,9 +1590,12 @@ function lookup(code){
       name: [p.brands, p.product_name].filter(Boolean).join(" ").trim() || ("Product " + code),
       cal: cal100,
       p: pick(n, "proteins_100g"), c: pick(n, "carbohydrates_100g"),
-      f: pick(n, "fat_100g"), b: pick(n, "fiber_100g")
+      f: pick(n, "fat_100g"), b: pick(n, "fiber_100g"),
+      nova: (p.nova_group >= 1 && p.nova_group <= 4) ? p.nova_group : null,
+      adds: badAdditives(p.additives_tags)
     };
-    $("prodName").textContent = per100.name + " — " + r(per100.cal) + " cal per 100g";
+    var extra = per100.nova ? "  ·  " + NOVA[per100.nova] : "";
+    $("prodName").textContent = per100.name + " — " + r(per100.cal) + " cal per 100g" + extra;
     var serve = parseFloat(String(p.serving_size || "").replace(/[^0-9.]/g, ""));
     $("gIn").value = isFinite(serve) && serve > 0 ? serve : 100;
     $("gramsPane").style.display = "";
@@ -1457,7 +1609,7 @@ function lookup(code){
     setScanMsg(m, true);
     setTimeout(function(){
       closeScan();
-      setFoodMsg("Barcode " + scanned + " noted. Fill in the values and tick save to remember it.", false);
+      setFoodMsg("Barcode " + scanned + " noted, food type set to PROCESSED since it is packaged. Change it if that is wrong, fill in the values and tick save to remember it.", false);
     }, 2600);
   });
 }
@@ -1487,10 +1639,15 @@ $("gramsOk").onclick = function(){
   if (!per100) return;
   var g = parseFloat($("gIn").value);
   if (!isFinite(g) || g <= 0){ flash($("gIn")); return; }
+  scannedAdds = (per100.adds || []).slice();
+  novaPick = per100.nova || 3;
+  var note = per100.nova ? "Rated " + NOVA[per100.nova] + "." : "No processing rating available, defaulted to PROCESSED.";
+  if (scannedAdds.length) note += " Flagged: " + scannedAdds.join(", ") + ".";
   fillForm(per100.name, g, scale(per100.cal, g),
     scale(per100.p, g), scale(per100.c, g), scale(per100.f, g), scale(per100.b, g));
+  paintNova("novaRow", novaPick);
   closeScan();
-  setFoodMsg("Filled from the barcode for " + r(g) + "g. Check it, then add to your log.", false);
+  setFoodMsg("Filled from the barcode for " + r(g) + "g. " + note, false);
 };
 function fillForm(name, g, cal, p, c, f, b){
   tab("new");
@@ -1537,7 +1694,7 @@ $("prepAdd").onclick = function(){
   db.preps.push({
     id:newId(), name:name, g:g, cal:toCal(raw, pKj),
     p:optNum($("pP")), c:optNum($("pC")), f:optNum($("pF")), b:optNum($("pB")),
-    ts:Date.now()
+    nova:1, adds:[], ts:Date.now()
   });
   db.preps.sort(function(a,b){ return a.name.localeCompare(b.name); });
   save();
