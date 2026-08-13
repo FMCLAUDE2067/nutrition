@@ -161,6 +161,8 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 /* ---------- modal ---------- */
 .modal{position:absolute;inset:0;background:rgba(0,0,0,.88);z-index:40;display:none;padding:16px;overflow-y:auto}
 .modal.on{display:block}
+#ingModal{z-index:45}
+#scanModal{z-index:50}
 #editModal{z-index:50}
 .sheet{border:1px solid var(--grn);background:var(--bg);padding:12px}
 .sheet h3{font-size:calc(12px*var(--fs));font-weight:400;letter-spacing:.12em;color:var(--grn-fade);margin-bottom:11px;display:flex;justify-content:space-between;align-items:center}
@@ -375,6 +377,33 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
     </div>
   </div>
 
+  <div class="modal" id="ingModal">
+    <div class="sheet">
+      <h3><span id="ingTitle">ADD INGREDIENT</span><button class="btn sm" id="ingX">CLOSE</button></h3>
+      <div class="fld"><label>NAME</label><input type="text" id="iName" placeholder="chicken breast"></div>
+      <div class="fld"><label>HOW MUCH WENT IN THE BATCH (g)</label><input type="number" id="iG" inputmode="numeric" placeholder="500"></div>
+      <div class="fld">
+        <label>ENERGY FOR THAT WEIGHT</label>
+        <div style="display:flex;gap:5px">
+          <input type="number" id="iCal" inputmode="numeric" placeholder="620">
+          <button class="btn on" id="iUnitCal" style="flex:0 0 46px">CAL</button>
+          <button class="btn" id="iUnitKj" style="flex:0 0 46px">kJ</button>
+        </div>
+      </div>
+      <div class="g4">
+        <div class="fld"><label>PROT g</label><input type="number" id="iP" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>CARB g</label><input type="number" id="iC" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>FAT g</label><input type="number" id="iF" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>FIBRE g</label><input type="number" id="iB" inputmode="decimal" placeholder="opt"></div>
+      </div>
+      <div class="g2" style="margin-top:7px">
+        <button class="btn" id="ingOk">SAVE INGREDIENT</button>
+        <button class="btn dim" id="ingDel">REMOVE</button>
+      </div>
+      <div class="hint" id="ingMsg"></div>
+    </div>
+  </div>
+
   <div class="modal" id="scanModal">
     <div class="sheet">
       <h3><span>SCAN BARCODE</span><button class="btn sm" id="scanX">CANCEL</button></h3>
@@ -436,6 +465,35 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
       <div class="hint">Applies to this device only, so your phone and PC can be set differently. The boot screen is not affected.</div>
 
       <div class="hd" style="margin-top:16px">MEAL PREP <span id="prepCount">0</span></div>
+      <div class="tabs">
+        <button class="btn on" id="tabRecipe">BUILD RECIPE</button>
+        <button class="btn" id="tabQuick">QUICK ENTRY</button>
+      </div>
+
+      <div id="paneRecipe">
+        <div class="fld"><label>RECIPE NAME</label><input type="text" id="rName" placeholder="chicken and rice batch"></div>
+        <div id="inglist" style="max-height:190px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
+        <div class="g3" style="margin-top:7px">
+          <button class="btn" id="ingScan">SCAN</button>
+          <button class="btn" id="ingFav">MY FOODS</button>
+          <button class="btn" id="ingNew">TYPE IN</button>
+        </div>
+        <div id="ingPick" style="display:none;margin-top:7px">
+          <div class="fld"><input type="text" id="ingSearch" placeholder="search saved foods" autocomplete="off"></div>
+          <div id="ingFavList" style="max-height:150px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
+        </div>
+        <div class="hint" id="batchTot" style="margin-top:9px"></div>
+        <div class="hint" id="batchWarn" style="margin-top:3px"></div>
+        <div class="fld" style="margin-top:9px"><label>HOW MANY SERVES DOES THIS MAKE?</label><input type="number" id="rServes" inputmode="numeric" placeholder="5"></div>
+        <div class="hint" id="serveOut" style="margin-top:0"></div>
+        <div class="g2" style="margin-top:9px">
+          <button class="btn" id="recipeSave">SAVE MEAL PREP</button>
+          <button class="btn dim" id="recipeClear">CLEAR</button>
+        </div>
+        <button class="btn full dim" id="recipeDel" style="display:none;margin-top:6px">DELETE THIS MEAL PREP</button>
+      </div>
+
+      <div id="paneQuick" style="display:none">
       <div class="fld"><input type="text" id="pName" placeholder="chicken and rice bowl"></div>
       <div class="fld"><label>WEIGHT OF ONE SERVE (g)</label><input type="number" id="pG" inputmode="numeric" placeholder="450"></div>
       <div class="fld">
@@ -453,8 +511,10 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
         <div class="fld"><label>FIBRE g</label><input type="number" id="pB" inputmode="decimal" placeholder="opt"></div>
       </div>
       <button class="btn full" id="prepAdd">ADD MEAL PREP</button>
+      </div>
+
       <div id="prepManage" style="max-height:150px;overflow-y:auto;border:1px solid var(--line-faint);margin-top:9px"></div>
-      <div class="hint" id="prepMsg">These appear on the PREP tab when you add food, for one tap logging.</div>
+      <div class="hint" id="prepMsg">These appear on the PREP tab when you add food, for one tap logging. Tap a recipe below to reopen its ingredients.</div>
 
       <div class="hd" style="margin-top:16px">BACKUP</div>
       <div class="g2">
@@ -477,7 +537,7 @@ input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-
 (function(){
 "use strict";
 
-var VERSION = "2.1.1";
+var VERSION = "2.2.0";
 var NOVA = ["", "ANIMAL", "PLANT", "SUGAR & SALT", "INDUSTRIAL", "MOUTHFEEL", "PRESERVATIVE", "COLOUR & FLAVOUR"];
 var DIRTY = [4,5,6,7];
 var OLD2NEW = {1:2,2:3,3:4,4:4};
@@ -523,6 +583,8 @@ function normalise(d){
     if (typeof d.preps[i].ts !== "number") d.preps[i].ts = 0;
     if (typeof d.preps[i].g !== "number" || d.preps[i].g <= 0) d.preps[i].g = null;
     if (!Array.isArray(d.preps[i].adds)) d.preps[i].adds = [];
+    if (!Array.isArray(d.preps[i].ings)) d.preps[i].ings = [];
+    if (typeof d.preps[i].serves !== "number" || d.preps[i].serves <= 0) d.preps[i].serves = null;
     d.preps[i].cats = mapCats(d.preps[i].cats, d.preps[i].nova, old, d.preps[i].name);
     delete d.preps[i].nova;
   }
@@ -1178,6 +1240,7 @@ function openSettings(){
   if (cfg.err) setSyncMsg(cfg.err, true);
   renderFavManage();
   renderPrepManage();
+  renderIngs();
   $("setModal").className = "modal on";
 }
 function renderFavManage(){
@@ -1254,6 +1317,7 @@ document.addEventListener("keydown", function(e){
   }
   if (e.key === "Escape"){
     if ($("scanModal").className.indexOf("on") >= 0){ closeScan(); return; }
+    if ($("ingModal").className.indexOf("on") >= 0){ closeIng(); return; }
     if ($("editModal").className.indexOf("on") >= 0){ $("editModal").className = "modal"; editing = null; return; }
     $("foodModal").className = "modal";
     $("setModal").className = "modal";
@@ -1516,20 +1580,24 @@ function manageRow(item, kind){
   row.style.cursor = "pointer";
   var a = document.createElement("span"); a.className = "nm"; a.textContent = item.name;
   var m = document.createElement("span"); m.className = "mc";
-  m.textContent = item.g ? r(item.g) + "g" : "NEEDS WEIGHT";
+  var isRecipe = kind === "prep" && item.ings && item.ings.length;
+  m.textContent = item.g ? r(item.g) + "g" + (isRecipe ? " · " + item.ings.length + " ING" : "") : "NEEDS WEIGHT";
   if (!item.g) m.style.color = "var(--warn)";
   var b = document.createElement("span"); b.className = "cal"; b.textContent = r(num(item.cal));
   var e = document.createElement("button");
   e.className = "xb"; e.textContent = "›";
   e.setAttribute("aria-label", "Edit " + item.name);
   row.appendChild(a); row.appendChild(m); row.appendChild(b); row.appendChild(e);
-  row.onclick = function(){ openEdit(item, kind); };
+  row.onclick = function(){
+    if (isRecipe){ loadRecipe(item); return; }
+    openEdit(item, kind);
+  };
   return row;
 }
 
 /* ---------- barcode ---------- */
 var SCANLIB = "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js";
-var scanner = null, libLoading = null, per100 = null;
+var scanner = null, libLoading = null, per100 = null, scanTarget = "food";
 
 function setScanMsg(msg, bad){
   var el = $("scanMsg");
@@ -1571,7 +1639,10 @@ $("manGo").onclick = function(){
 };
 $("manIn").onkeydown = function(e){ if (e.key === "Enter") $("manGo").onclick(); };
 
-$("scanBtn").onclick = function(){
+$("scanBtn").onclick = function(){ openScan("food"); };
+
+function openScan(target){
+  scanTarget = target || "food";
   $("scanModal").className = "modal on";
   $("gramsPane").style.display = "none";
   setScanMsg("Loading scanner...", false);
@@ -1593,7 +1664,7 @@ $("scanBtn").onclick = function(){
     if (/permission|NotAllowed/i.test(m)) m = "Camera permission was refused. Allow it in your browser settings, or type the numbers in manually.";
     setScanMsg(m, true);
   });
-};
+}
 
 function onScan(text){
   if (scanner){
@@ -1611,6 +1682,11 @@ function onScan(text){
   }
   if (localHit){
     closeScan();
+    if (scanTarget === "recipe"){
+      scanned = null;
+      openIngFromFood(localHit, "Matched " + localHit.name + " from your saved foods. Set how much went in the batch.");
+      return;
+    }
     if (localHit.g){
       tab("fav");
       picked = localHit; pickedPrep = null;
@@ -1666,9 +1742,15 @@ function lookup(code){
     else if (m === "noenergy") m = "Found the product but it has no energy value recorded. Enter it manually.";
     else m = "Lookup failed: " + m + ". Enter it manually.";
     setScanMsg(m, true);
+    var failedCode = scanned;
     setTimeout(function(){
       closeScan();
-      setFoodMsg("Barcode " + scanned + " noted, food type set to PROCESSED since it is packaged. Change it if that is wrong, fill in the values and tick save to remember it.", false);
+      if (scanTarget === "recipe"){
+        scanned = null;
+        openIngNew({}, null, [4], [], "Barcode " + failedCode + " gave nothing usable. Type the label values in, the weight being what goes into the batch.");
+        return;
+      }
+      setFoodMsg("Barcode " + failedCode + " noted, food type set to PROCESSED since it is packaged. Change it if that is wrong, fill in the values and tick save to remember it.", false);
     }, 2600);
   });
 }
@@ -1698,6 +1780,20 @@ $("gramsOk").onclick = function(){
   if (!per100) return;
   var g = parseFloat($("gIn").value);
   if (!isFinite(g) || g <= 0){ flash($("gIn")); return; }
+  if (scanTarget === "recipe"){
+    var ing = {
+      name: per100.name, g: g, cal: scale(per100.cal, g),
+      p: scale(per100.p, g), c: scale(per100.c, g),
+      f: scale(per100.f, g), b: scale(per100.b, g),
+      cats: (per100.cats || [4]).slice(), adds: (per100.adds || []).slice(),
+      basis: { cal: per100.cal, p: per100.p, c: per100.c, f: per100.f, b: per100.b }
+    };
+    scanned = null;
+    closeScan();
+    addIng(ing);
+    setPrepMsg("Added " + ing.name + " at " + r(g) + "g. Tap it in the list to change the weight.", false);
+    return;
+  }
   scannedAdds = (per100.adds || []).slice();
   scannedCats = (per100.cats || [4]).slice();
   var note = "Categories: " + scannedCats.map(function(c){ return NOVA[c]; }).join(", ") + ".";
@@ -1762,6 +1858,324 @@ $("prepAdd").onclick = function(){
   setPrepUnit(false);
   renderPrepManage();
   setPrepMsg("Saved. It now appears on the PREP tab.", false);
+};
+
+/* ---------- recipe builder ---------- */
+var recipe = { id:null, ings:[] };
+var ingIx = -1, ingBasis = null, ingCats = null, ingAdds = [], iKj = false;
+
+function prepTab(which){
+  var rec = which !== "quick";
+  $("paneRecipe").style.display = rec ? "" : "none";
+  $("paneQuick").style.display = rec ? "none" : "";
+  $("tabRecipe").className = "btn" + (rec ? " on" : "");
+  $("tabQuick").className = "btn" + (rec ? "" : " on");
+}
+$("tabRecipe").onclick = function(){ prepTab("recipe"); };
+$("tabQuick").onclick = function(){ prepTab("quick"); $("ingPick").style.display = "none"; };
+
+function ingTotals(){
+  var t = { g:0, cal:0, p:0, c:0, f:0, b:0, hasP:false, hasC:false, hasF:false, hasB:false, miss:0 };
+  for (var i = 0; i < recipe.ings.length; i++){
+    var x = recipe.ings[i];
+    t.g += num(x.g); t.cal += num(x.cal);
+    if (!blank(x.p)){ t.p += num(x.p); t.hasP = true; }
+    if (!blank(x.c)){ t.c += num(x.c); t.hasC = true; }
+    if (!blank(x.f)){ t.f += num(x.f); t.hasF = true; }
+    if (!blank(x.b)){ t.b += num(x.b); t.hasB = true; }
+    if (blank(x.p) || blank(x.c) || blank(x.f)) t.miss++;
+  }
+  return t;
+}
+function ingGap(x){
+  if (blank(x.p) && blank(x.c) && blank(x.f)) return "NO MACROS";
+  if (blank(x.p) || blank(x.c) || blank(x.f)) return "PART MACROS";
+  return "";
+}
+function renderIngs(){
+  var box = $("inglist");
+  box.textContent = "";
+  if (!recipe.ings.length){
+    var e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = "NO INGREDIENTS YET";
+    box.appendChild(e);
+  } else {
+    recipe.ings.forEach(function(x, ix){
+      var row = document.createElement("div");
+      row.className = "item";
+      row.style.cursor = "pointer";
+      var a = document.createElement("span"); a.className = "nm"; a.textContent = x.name;
+      var m = document.createElement("span"); m.className = "mc";
+      var gap = ingGap(x);
+      m.textContent = r(x.g) + "g" + (gap ? " · " + gap : "");
+      if (gap) m.style.color = "var(--warn)";
+      var c = document.createElement("span"); c.className = "cal"; c.textContent = r(num(x.cal));
+      var e2 = document.createElement("button");
+      e2.className = "xb"; e2.textContent = "›";
+      e2.setAttribute("aria-label", "Edit " + x.name);
+      row.appendChild(a); row.appendChild(m); row.appendChild(c); row.appendChild(e2);
+      row.onclick = function(){ openIng(ix); };
+      box.appendChild(row);
+    });
+  }
+  $("recipeDel").style.display = recipe.id ? "" : "none";
+  renderBatch();
+}
+function renderBatch(){
+  var t = ingTotals(), bt = $("batchTot"), bw = $("batchWarn"), so = $("serveOut");
+  if (!recipe.ings.length){
+    bt.style.color = "var(--grn-fade)";
+    bt.textContent = "Add what goes in the batch by scanning a barcode, picking a saved food, or typing the label values. The totals and the per serve split are worked out here.";
+    bw.textContent = ""; so.textContent = "";
+    return;
+  }
+  bt.style.color = "var(--grn-fade)";
+  bt.textContent = "BATCH  " + r(t.g) + "g  ·  " + r(t.cal) + " cal  ·  P" + r1(t.p) + "  C" + r1(t.c) + "  F" + r1(t.f) + "  Fb" + r1(t.b);
+  if (t.miss){
+    bw.style.color = "var(--warn)";
+    bw.textContent = t.miss + " of " + recipe.ings.length + " missing macro values, so those totals read low. Tap the amber rows and fill them in from the label.";
+  } else bw.textContent = "";
+  var n = parseFloat($("rServes").value);
+  if (!isFinite(n) || n <= 0){
+    so.style.color = "var(--grn-fade)";
+    so.textContent = "Enter how many serves the batch splits into to see the per serve numbers.";
+    return;
+  }
+  so.style.color = "var(--grn-fade)";
+  so.textContent = "PER SERVE  " + r(t.g / n) + "g  ·  " + r(t.cal / n) + " cal  ·  P" + r1(t.p / n) +
+    "  C" + r1(t.c / n) + "  F" + r1(t.f / n) + "  Fb" + r1(t.b / n) +
+    "  ·  weight is the batch split evenly, so if liquid cooks off, weigh a finished serve and correct it after saving.";
+}
+$("rServes").oninput = renderBatch;
+
+function addIng(x){
+  recipe.ings.push(x);
+  renderIngs();
+  prepTab("recipe");
+}
+
+/* ingredient entry */
+function setIUnit(kj){
+  iKj = kj;
+  $("iUnitCal").className = "btn" + (kj ? "" : " on");
+  $("iUnitKj").className = "btn" + (kj ? " on" : "");
+}
+$("iUnitCal").onclick = function(){ setIUnit(false); };
+$("iUnitKj").onclick = function(){ setIUnit(true); };
+function setIngMsg(msg, bad){
+  var el = $("ingMsg");
+  el.textContent = msg;
+  el.style.color = bad ? "var(--warn)" : "var(--grn-fade)";
+}
+function closeIng(){ $("ingModal").className = "modal"; ingIx = -1; ingBasis = null; ingCats = null; ingAdds = []; }
+$("ingX").onclick = closeIng;
+
+function per100Of(x){
+  if (!x || !x.g || num(x.g) <= 0) return null;
+  var k = 100 / num(x.g);
+  return {
+    cal: num(x.cal) * k,
+    p: blank(x.p) ? null : num(x.p) * k,
+    c: blank(x.c) ? null : num(x.c) * k,
+    f: blank(x.f) ? null : num(x.f) * k,
+    b: blank(x.b) ? null : num(x.b) * k
+  };
+}
+function setIngFields(x){
+  $("iName").value = x.name || "";
+  $("iG").value = blank(x.g) ? "" : r(num(x.g));
+  $("iCal").value = blank(x.cal) ? "" : r(num(x.cal));
+  $("iP").value = blank(x.p) ? "" : r1(num(x.p));
+  $("iC").value = blank(x.c) ? "" : r1(num(x.c));
+  $("iF").value = blank(x.f) ? "" : r1(num(x.f));
+  $("iB").value = blank(x.b) ? "" : r1(num(x.b));
+}
+function openIngNew(seed, basis, cats, adds, msg){
+  ingIx = -1;
+  ingBasis = basis || null;
+  ingCats = cats ? cats.slice() : null;
+  ingAdds = adds ? adds.slice() : [];
+  setIUnit(false);
+  setIngFields(seed || {});
+  $("ingTitle").textContent = "ADD INGREDIENT";
+  $("ingDel").style.display = "none";
+  setIngMsg(msg || "Enter the weight that goes into the batch and the numbers for that weight. Blank macros are flagged on the list so you can fill them in later.", false);
+  $("ingModal").className = "modal on";
+  $("iName").focus();
+}
+function openIngFromFood(src, msg){
+  var basis = per100Of(src);
+  var g = src.g ? num(src.g) : null;
+  openIngNew(
+    { name: src.name, g: g, cal: src.cal, p: src.p, c: src.c, f: src.f, b: src.b },
+    basis, src.cats, src.adds,
+    msg || ("Loaded " + src.name + ". Change the weight and the numbers follow.")
+  );
+  if (!basis) setIngMsg(src.name + " has no serving weight saved, so nothing can be scaled. Enter the weight and the numbers for it.", true);
+}
+function openIng(ix){
+  var x = recipe.ings[ix];
+  if (!x) return;
+  ingIx = ix;
+  ingBasis = x.basis || per100Of(x);
+  ingCats = (x.cats || []).slice();
+  ingAdds = (x.adds || []).slice();
+  setIUnit(false);
+  setIngFields(x);
+  $("ingTitle").textContent = "EDIT INGREDIENT";
+  $("ingDel").style.display = "";
+  var gap = ingGap(x);
+  setIngMsg(gap
+    ? "This one is missing macro values. Fill them in from the label, or leave them and the batch totals stay flagged."
+    : "Change the weight and the numbers rescale. Type over any number to set it yourself.", !!gap);
+  $("ingModal").className = "modal on";
+}
+$("iG").oninput = function(){
+  if (!ingBasis) return;
+  var g = parseFloat($("iG").value);
+  if (!isFinite(g) || g <= 0) return;
+  setIUnit(false);
+  $("iCal").value = r(scale(ingBasis.cal, g));
+  $("iP").value = ingBasis.p === null ? "" : r1(scale(ingBasis.p, g));
+  $("iC").value = ingBasis.c === null ? "" : r1(scale(ingBasis.c, g));
+  $("iF").value = ingBasis.f === null ? "" : r1(scale(ingBasis.f, g));
+  $("iB").value = ingBasis.b === null ? "" : r1(scale(ingBasis.b, g));
+};
+function rebase(){
+  var g = parseFloat($("iG").value), raw = parseFloat($("iCal").value);
+  if (!isFinite(g) || g <= 0 || !isFinite(raw)){ ingBasis = null; return; }
+  ingBasis = per100Of({
+    g: g, cal: toCal(raw, iKj),
+    p: optNum($("iP")), c: optNum($("iC")), f: optNum($("iF")), b: optNum($("iB"))
+  });
+}
+["iCal","iP","iC","iF","iB"].forEach(function(id){ $(id).oninput = rebase; });
+
+$("ingOk").onclick = function(){
+  var name = $("iName").value.trim();
+  var g = parseFloat($("iG").value), raw = parseFloat($("iCal").value);
+  if (!name){ setIngMsg("Give the ingredient a name.", true); flash($("iName")); return; }
+  if (!isFinite(g) || g <= 0){ setIngMsg("Enter how many grams went into the batch.", true); flash($("iG")); return; }
+  if (!isFinite(raw)){ setIngMsg("An energy value is required.", true); flash($("iCal")); return; }
+  var x = {
+    name: name, g: g, cal: toCal(raw, iKj),
+    p: optNum($("iP")), c: optNum($("iC")), f: optNum($("iF")), b: optNum($("iB")),
+    cats: (ingCats && ingCats.length) ? ingCats.slice() : classifyName(name),
+    adds: ingAdds.slice()
+  };
+  x.basis = per100Of(x);
+  if (ingIx >= 0) recipe.ings[ingIx] = x; else recipe.ings.push(x);
+  closeIng();
+  renderIngs();
+  setPrepMsg(name + " is in the batch.", false);
+};
+$("ingDel").onclick = function(){
+  if (ingIx >= 0) recipe.ings.splice(ingIx, 1);
+  closeIng();
+  renderIngs();
+  setPrepMsg("Ingredient removed.", false);
+};
+
+$("ingNew").onclick = function(){ $("ingPick").style.display = "none"; openIngNew({}, null, null, [], ""); };
+$("ingScan").onclick = function(){ $("ingPick").style.display = "none"; openScan("recipe"); };
+$("ingFav").onclick = function(){
+  var open = $("ingPick").style.display === "none";
+  $("ingPick").style.display = open ? "" : "none";
+  if (open){ $("ingSearch").value = ""; renderIngFavs(); }
+};
+$("ingSearch").oninput = renderIngFavs;
+function renderIngFavs(){
+  var box = $("ingFavList"), q = $("ingSearch").value.toLowerCase().trim();
+  box.textContent = "";
+  var list = db.favourites.filter(function(f){ return !q || f.name.toLowerCase().indexOf(q) >= 0; });
+  if (!list.length){
+    var e = document.createElement("div");
+    e.className = "empty";
+    e.textContent = db.favourites.length ? "NO MATCH" : "NO SAVED FOODS YET";
+    box.appendChild(e);
+    return;
+  }
+  list.forEach(function(f){
+    box.appendChild(pickRow(f, null, function(){
+      $("ingPick").style.display = "none";
+      openIngFromFood(f);
+    }));
+  });
+}
+
+function clearRecipe(){
+  recipe = { id:null, ings:[] };
+  $("rName").value = ""; $("rServes").value = "";
+  renderIngs();
+}
+function loadRecipe(p){
+  recipe = { id: p.id, ings: JSON.parse(JSON.stringify(p.ings || [])) };
+  $("rName").value = p.name;
+  $("rServes").value = p.serves ? r(p.serves) : "";
+  prepTab("recipe");
+  $("ingPick").style.display = "none";
+  renderIngs();
+  setPrepMsg("Editing " + p.name + ". Change the ingredients or the serves and save again, or clear to start fresh.", false);
+}
+$("recipeClear").onclick = function(){
+  clearRecipe();
+  setPrepMsg("Builder cleared.", false);
+};
+$("recipeDel").onclick = function(){
+  if (!recipe.id) return;
+  for (var i = 0; i < db.preps.length; i++){
+    if (db.preps[i].id === recipe.id){
+      db.tombs[recipe.id] = Date.now();
+      if (pickedPrep && pickedPrep.id === recipe.id) pickedPrep = null;
+      db.preps.splice(i, 1);
+      break;
+    }
+  }
+  save();
+  clearRecipe();
+  renderPrepManage();
+  setPrepMsg("Meal prep deleted.", false);
+};
+$("recipeSave").onclick = function(){
+  var name = $("rName").value.trim(), n = parseFloat($("rServes").value);
+  if (!name){ setPrepMsg("Give the recipe a name.", true); flash($("rName")); return; }
+  if (!recipe.ings.length){ setPrepMsg("Add at least one ingredient first.", true); flash($("inglist")); return; }
+  if (!isFinite(n) || n <= 0){ setPrepMsg("Enter how many serves the batch makes.", true); flash($("rServes")); return; }
+  var t = ingTotals();
+  if (t.g <= 0){ setPrepMsg("The ingredient weights add up to nothing. Check them.", true); return; }
+  var cats = [], adds = [];
+  recipe.ings.forEach(function(x){
+    (x.cats || []).forEach(function(c){ if (cats.indexOf(c) < 0) cats.push(c); });
+    (x.adds || []).forEach(function(a){ if (adds.indexOf(a) < 0) adds.push(a); });
+  });
+  if (!cats.length) cats = classifyName(name);
+  var rec = {
+    id: recipe.id || newId(),
+    name: name,
+    g: t.g / n,
+    cal: t.cal / n,
+    p: t.hasP ? t.p / n : null,
+    c: t.hasC ? t.c / n : null,
+    f: t.hasF ? t.f / n : null,
+    b: t.hasB ? t.b / n : null,
+    cats: cats, adds: adds,
+    serves: n,
+    ings: JSON.parse(JSON.stringify(recipe.ings)),
+    ts: Date.now()
+  };
+  var found = false;
+  for (var i = 0; i < db.preps.length; i++){
+    if (db.preps[i].id === rec.id){ db.preps[i] = rec; found = true; break; }
+  }
+  if (!found) db.preps.push(rec);
+  db.preps.sort(function(a, b){ return a.name.localeCompare(b.name); });
+  save();
+  clearRecipe();
+  renderPrepManage();
+  var msg = (found ? "Updated " : "Saved ") + rec.name + ": " + r(n) + " serves at " + r(rec.cal) + " cal and " + r(rec.g) + "g each.";
+  if (t.miss) msg += " " + t.miss + " ingredient(s) had missing macros, so the saved macros read low.";
+  setPrepMsg(msg, !!t.miss);
 };
 
 /* ---------- backup ---------- */
