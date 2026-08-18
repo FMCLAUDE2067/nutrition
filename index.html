@@ -50,8 +50,9 @@ body{
 }
 @media (max-width:520px){
   #frame{border:none;width:100dvw;height:100dvh}
-  #top{padding-top:calc(9px + env(safe-area-inset-top))}
-  #scroll{padding-bottom:calc(34px + env(safe-area-inset-bottom))}
+  #top{padding-top:calc(10px + env(safe-area-inset-top))}
+  #tabbar{padding-bottom:calc(9px + env(safe-area-inset-bottom))}
+  #fab{bottom:calc(76px + env(safe-area-inset-bottom))}
 }
 
 /* ---------- boot ---------- */
@@ -163,14 +164,14 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px
 
 /* ---------- chart ---------- */
 #chart{display:flex;align-items:flex-end;gap:4px;height:78px;margin-bottom:6px;position:relative}
-#chart .col{flex:1 1 0;display:flex;flex-direction:column;justify-content:flex-end;height:100%;background:var(--track);border-radius:2px 2px 0 0}
+#chart .col{flex:1 1 0;min-width:0;display:flex;flex-direction:column;justify-content:flex-end;height:100%;background:var(--track);border-radius:2px 2px 0 0}
 #chart .cb{background:var(--grn-dim);width:100%;min-height:1px;border-radius:2px 2px 0 0}
 #chart .cb.today{background:var(--grn);box-shadow:0 0 10px var(--glow)}
 #chart .cb.over{background:var(--bad)}
 #chart .cb.zero{background:var(--line-faint)}
 #tline{position:absolute;left:0;right:0;border-top:1px dashed var(--line);pointer-events:none}
 #xax{display:flex;gap:4px;font-size:calc(9px*var(--fs));color:var(--grn-fade);text-align:center}
-#xax span{flex:1 1 0}
+#xax span{flex:1 1 0;min-width:0;overflow:hidden}
 #avgs{display:grid;grid-template-columns:1fr 1fr;gap:7px 10px;margin-top:11px;font-size:calc(10.5px*var(--fs))}
 #avgs div{display:flex;justify-content:space-between;border-bottom:1px solid var(--line-faint);padding-bottom:4px}
 #avgs b{font-weight:400;color:var(--txt)}
@@ -211,7 +212,81 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px
 .tabs .btn{flex:1 1 0;border:none;border-right:1px solid var(--line-faint);border-radius:0}
 .tabs .btn:last-child{border-right:none}
 .hint{font-size:calc(9.5px*var(--fs));color:var(--grn-fade);line-height:1.6;margin-top:8px}
-#inglist,#prepManage,#favManage,#ingFavList,#reader{border-radius:var(--r);overflow:hidden}
+/* ---------- pages + tab bar ---------- */
+.pg{display:none}
+.pg.on{display:block}
+#pgTitle{font-size:calc(12px*var(--fs));letter-spacing:.14em;color:var(--txt)}
+#tabbar{flex:0 0 auto;display:flex;border-top:1px solid var(--line);background:var(--panel2);padding:7px 3px 9px}
+.tb{flex:1 1 0;text-align:center;font-size:calc(8.5px*var(--fs));letter-spacing:.09em;color:var(--grn-fade);
+  padding:2px 0;cursor:pointer;background:none;border:none;font-family:var(--mono);min-width:0}
+.tb .ic{display:block;font-size:calc(13px*var(--fs));line-height:1.3;margin-bottom:3px}
+.tb.on{color:var(--grn)}
+.tb.on .ic{text-shadow:0 0 10px var(--glow)}
+#fab{position:absolute;right:14px;bottom:76px;width:48px;height:48px;border-radius:50%;z-index:20;
+  background:var(--grn);color:#03140a;border:none;font-size:calc(24px*var(--fs));line-height:46px;
+  text-align:center;box-shadow:0 0 22px var(--glow);font-family:var(--mono);cursor:pointer;padding:0}
+#fab:active{transform:scale(.94)}
+#fab.hide{display:none}
+
+/* ---------- segmented control ---------- */
+.seg{display:flex;border:1px solid var(--line-faint);border-radius:var(--r);overflow:hidden;margin-bottom:10px}
+.seg button{flex:1 1 0;text-align:center;font-size:calc(9.5px*var(--fs));letter-spacing:.11em;padding:7px 0;
+  color:var(--grn-dim);background:none;border:none;font-family:var(--mono);cursor:pointer;
+  border-right:1px solid var(--line-faint)}
+.seg button:last-child{border-right:none}
+.seg button.on{background:var(--grn);color:#03140a}
+
+/* ---------- stats ---------- */
+.tiles{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.tile{background:var(--panel2);border:1px solid var(--line-faint);border-radius:var(--r);padding:9px 10px;min-width:0}
+.tile .tv{font-size:calc(17px*var(--fs));color:var(--txt);line-height:1.15;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile .tv u{text-decoration:none;font-size:calc(9px*var(--fs));color:var(--grn-fade)}
+.tile .tv.over{color:var(--bad)}
+.tile .tl{font-size:calc(8.5px*var(--fs));letter-spacing:.12em;color:var(--grn-dim);margin-top:5px}
+.donut{display:flex;align-items:center;gap:14px}
+.donut svg{flex:0 0 auto}
+.dleg{flex:1 1 auto;min-width:0;font-size:calc(10px*var(--fs))}
+.dleg div{display:flex;justify-content:space-between;padding:3px 0;color:var(--grn-dim)}
+.dleg b{font-weight:400;color:var(--txt)}
+.dleg u{text-decoration:none;display:inline-block;width:7px;height:7px;border-radius:2px;margin-right:6px}
+.heat{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;max-width:calc(224px*var(--fs));margin:0 auto}
+.heat i{aspect-ratio:1;border-radius:2px;background:var(--track);display:block}
+.heat i.fut{background:none;border:1px solid var(--line-faint)}
+.heat i.hh{background:none;aspect-ratio:auto;font-style:normal;font-size:calc(8.5px*var(--fs));
+  color:var(--grn-fade);text-align:center;line-height:1.1;margin-bottom:1px}
+.heat i.l1{background:#1a5c30}
+.heat i.l2{background:var(--grn-dim)}
+.heat i.l3{background:var(--grn)}
+.heat i.ov{background:var(--bad)}
+.hleg{display:flex;justify-content:center;gap:9px;flex-wrap:wrap;align-items:center;font-size:calc(8.5px*var(--fs));color:var(--grn-fade);margin-top:9px}
+.hleg span{display:flex;align-items:center;gap:3px}
+.hleg i{width:8px;height:8px;border-radius:2px;display:block}
+
+/* ---------- chips ---------- */
+.chips{display:flex;gap:5px;flex-wrap:wrap}
+.chip{border:1px solid var(--line);background:var(--panel2);color:var(--txt);border-radius:20px;
+  font-size:calc(10px*var(--fs));padding:6px 11px;letter-spacing:.03em;white-space:nowrap;
+  font-family:var(--mono);cursor:pointer;max-width:100%;overflow:hidden;text-overflow:ellipsis}
+.chip u{text-decoration:none;color:var(--grn-fade)}
+.chip:hover{border-color:var(--grn);color:var(--grn)}
+.chip:active{background:var(--line-faint)}
+
+/* ---------- log groups ---------- */
+.grp{font-size:calc(9px*var(--fs));letter-spacing:.15em;color:var(--grn-dim);padding:10px 2px 4px;
+  border-bottom:1px solid var(--line-faint);display:flex;justify-content:space-between}
+.grp:first-child{padding-top:2px}
+.grp b{font-weight:400;color:var(--grn-fade)}
+.drow{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:9px 9px;
+  font-size:calc(11.5px*var(--fs));border-bottom:1px solid var(--line-faint);cursor:pointer;color:var(--txt)}
+.drow:last-child{border-bottom:none}
+.drow:hover{background:var(--line-faint)}
+.drow .dd{flex:1 1 auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.drow .dd em{font-style:normal;display:block;font-size:calc(9px*var(--fs));color:var(--grn-fade);margin-top:2px}
+.drow .dc{color:var(--grn);white-space:nowrap;font-size:calc(11.5px*var(--fs))}
+.drow .dc.over{color:var(--bad)}
+.drow.now{background:var(--line-faint)}
+
+#inglist,#prepManage,#favManage,#ingFavList,#reader,#weekList,#searchList,#topFoods{border-radius:var(--r);overflow:hidden}
 #inglist::-webkit-scrollbar,#prepManage::-webkit-scrollbar,#favManage::-webkit-scrollbar,#ingFavList::-webkit-scrollbar{width:4px}
 #inglist::-webkit-scrollbar-thumb,#prepManage::-webkit-scrollbar-thumb,#favManage::-webkit-scrollbar-thumb,#ingFavList::-webkit-scrollbar-thumb{background:var(--line);border-radius:2px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0)}
@@ -236,9 +311,12 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px
       <span id="dlabel">TODAY</span>
       <button class="navb" id="next" aria-label="Next day">&gt;</button>
     </div>
+    <div id="pgTitle" style="display:none">SETTINGS</div>
   </div>
 
   <div id="scroll">
+
+  <div class="pg on" id="pgToday">
 
     <div class="card">
       <div id="hero">
@@ -280,8 +358,8 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px
 
     <div class="card">
       <div class="hd">FOOD LOG <span id="logTot">0 CAL</span></div>
-      <button class="btn full" id="addFood" style="margin-bottom:9px">+ ADD FOOD</button>
       <div id="log"></div>
+      <button class="btn full dim" id="copyYest" style="margin-top:9px">&#8635; COPY YESTERDAY</button>
     </div>
 
     <div class="card">
@@ -319,20 +397,227 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px
       <div class="hint" id="slopAdds"></div>
     </div>
 
+  </div><!-- /pgToday -->
+
+  <div class="pg" id="pgLog">
     <div class="card">
-      <div class="hd">LAST 7 DAYS</div>
+      <div class="seg" id="logSeg">
+        <button class="on" data-lv="day">DAY</button>
+        <button data-lv="week">WEEK</button>
+        <button data-lv="find">SEARCH</button>
+      </div>
+
+      <div id="lvDay">
+        <div class="hd">TIMELINE <span id="lvDayTot">0 CAL</span></div>
+        <div id="dayGroups"></div>
+        <div class="hint" id="dayHint"></div>
+      </div>
+
+      <div id="lvWeek" style="display:none">
+        <div class="hd">LAST 7 DAYS <span id="weekTot"></span></div>
+        <div id="weekList" style="border:1px solid var(--line-faint)"></div>
+        <div class="hint">Tap a day to open it on the Today tab.</div>
+      </div>
+
+      <div id="lvFind" style="display:none">
+        <div class="fld"><input type="text" id="findIn" placeholder="search everything you have logged" autocomplete="off"></div>
+        <div id="searchList" style="border:1px solid var(--line-faint)"></div>
+        <div class="hint" id="findHint">Searches every day in your log by name.</div>
+      </div>
+    </div>
+  </div><!-- /pgLog -->
+
+  <div class="pg" id="pgPrep">
+  <div class="card">
+      <div class="hd">BUILD A BATCH</div>
+      <div class="tabs">
+        <button class="btn on" id="tabRecipe">BUILD RECIPE</button>
+        <button class="btn" id="tabQuick">QUICK ENTRY</button>
+      </div>
+
+      <div id="paneRecipe">
+        <div class="fld"><label>RECIPE NAME</label><input type="text" id="rName" placeholder="chicken and rice batch"></div>
+        <div id="inglist" style="max-height:190px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
+        <div class="g3" style="margin-top:7px">
+          <button class="btn" id="ingScan">SCAN</button>
+          <button class="btn" id="ingFav">MY FOODS</button>
+          <button class="btn" id="ingNew">TYPE IN</button>
+        </div>
+        <div id="ingPick" style="display:none;margin-top:7px">
+          <div class="fld"><input type="text" id="ingSearch" placeholder="search saved foods" autocomplete="off"></div>
+          <div id="ingFavList" style="max-height:150px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
+        </div>
+        <div class="hint" id="batchTot" style="margin-top:9px"></div>
+        <div class="hint" id="batchWarn" style="margin-top:3px"></div>
+        <div class="fld" style="margin-top:9px"><label>HOW MANY SERVES DOES THIS MAKE?</label><input type="number" id="rServes" inputmode="numeric" placeholder="5"></div>
+        <div class="hint" id="serveOut" style="margin-top:0"></div>
+        <div class="g2" style="margin-top:9px">
+          <button class="btn" id="recipeSave">SAVE MEAL PREP</button>
+          <button class="btn dim" id="recipeClear">CLEAR</button>
+        </div>
+        <button class="btn full dim" id="recipeDel" style="display:none;margin-top:6px">DELETE THIS MEAL PREP</button>
+      </div>
+
+      <div id="paneQuick" style="display:none">
+      <div class="fld"><input type="text" id="pName" placeholder="chicken and rice bowl"></div>
+      <div class="fld"><label>WEIGHT OF ONE SERVE (g)</label><input type="number" id="pG" inputmode="numeric" placeholder="450"></div>
+      <div class="fld">
+        <label>ENERGY FOR THAT WEIGHT</label>
+        <div style="display:flex;gap:5px">
+          <input type="number" id="pCal" inputmode="numeric" placeholder="energy">
+          <button class="btn on" id="pUnitCal" style="flex:0 0 46px">CAL</button>
+          <button class="btn" id="pUnitKj" style="flex:0 0 46px">kJ</button>
+        </div>
+      </div>
+      <div class="g4">
+        <div class="fld"><label>PROT g</label><input type="number" id="pP" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>CARB g</label><input type="number" id="pC" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>FAT g</label><input type="number" id="pF" inputmode="decimal" placeholder="opt"></div>
+        <div class="fld"><label>FIBRE g</label><input type="number" id="pB" inputmode="decimal" placeholder="opt"></div>
+      </div>
+      <button class="btn full" id="prepAdd">ADD MEAL PREP</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="hd">SAVED MEAL PREP <span id="prepCount">0</span></div>
+      <div id="prepManage" style="max-height:260px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
+      <div class="hint" id="prepMsg">These show up under PREP when you add food, for one tap logging. Tap a recipe to reopen its ingredients.</div>
+    </div>
+
+    <div class="card">
+      <div class="hd">MY FOODS <span id="favCount">0</span></div>
+      <div id="favManage" style="max-height:260px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
+      <div class="hint">Anything you ticked <b style="font-weight:400;color:var(--grn-dim)">save to my foods</b> on. Tap one to edit its weight, energy or macros.</div>
+    </div>
+  </div><!-- /pgPrep -->
+
+  <div class="pg" id="pgStats">
+    <div class="card">
+      <div class="hd">INTAKE</div>
+      <div class="seg" id="rangeSeg">
+        <button data-rg="7">7 DAYS</button>
+        <button class="on" data-rg="30">30 DAYS</button>
+        <button data-rg="90">90 DAYS</button>
+      </div>
       <div id="chart"><div id="tline"></div></div>
       <div id="xax"></div>
+      <div class="tiles" style="margin-top:11px" id="statTiles"></div>
+    </div>
+
+    <div class="card">
+      <div class="hd">MACRO SPLIT <span id="splitNote"></span></div>
+      <div class="donut">
+        <div id="donutBox"></div>
+        <div class="dleg" id="donutLeg"></div>
+      </div>
+      <div class="hint" id="splitHint"></div>
+    </div>
+
+    <div class="card">
+      <div class="hd">CONSISTENCY <span>LAST 8 WEEKS</span></div>
+      <div class="heat" id="heat"></div>
+      <div class="hleg">
+        <span><i style="background:var(--track)"></i>none</span>
+        <span><i style="background:#1a5c30"></i>light</span>
+        <span><i style="background:var(--grn-dim)"></i>most of target</span>
+        <span><i style="background:var(--grn)"></i>on target</span>
+        <span><i style="background:var(--bad)"></i>over</span>
+      </div>
+      <div class="hint" id="heatHint"></div>
+    </div>
+
+    <div class="card">
+      <div class="hd">PROTEIN <span id="protNote"></span></div>
+      <div id="protBars"></div>
+      <div class="hint" id="protHint"></div>
+    </div>
+
+    <div class="card">
+      <div class="hd">AVERAGES</div>
       <div id="avgs"></div>
     </div>
 
-    <button class="btn full" id="openSet">SETTINGS</button>
+    <div class="card">
+      <div class="hd">TOP FOODS <span id="topNote"></span></div>
+      <div id="topFoods" style="border:1px solid var(--line-faint)"></div>
+    </div>
+  </div><!-- /pgStats -->
 
+  <div class="pg" id="pgSet">
+  <div class="card">
+      <div class="hd">DAILY TARGETS</div>
+      <div class="fld"><label>CALORIES</label><input type="number" id="sCal" inputmode="numeric"></div>
+      <div class="g4">
+        <div class="fld"><label>PROT g</label><input type="number" id="sP" inputmode="numeric"></div>
+        <div class="fld"><label>CARB g</label><input type="number" id="sC" inputmode="numeric"></div>
+        <div class="fld"><label>FAT g</label><input type="number" id="sF" inputmode="numeric"></div>
+        <div class="fld"><label>FIBRE g</label><input type="number" id="sB" inputmode="numeric"></div>
+      </div>
+      <div class="fld"><label>WATER (ml)</label><input type="number" id="sW" inputmode="numeric"></div>
+      <button class="btn full" id="setSave">SAVE TARGETS</button>
+      <div class="hint" id="setMsg"></div>
+    </div>
+
+    <div class="card">
+      <div class="hd">SYNC <span id="syncState">NOT CONNECTED</span></div>
+      <div class="fld"><label>GITHUB TOKEN (classic, gist scope)</label><input type="password" id="sTok" placeholder="ghp_..." autocomplete="off"></div>
+      <div class="fld"><label>GIST ID</label><input type="text" id="sGist" placeholder="leave blank and press CREATE" autocomplete="off"></div>
+      <div class="g2" style="margin-bottom:7px">
+        <button class="btn" id="syncCreate">CREATE NEW</button>
+        <button class="btn" id="syncConnect">CONNECT</button>
+      </div>
+      <div class="g2">
+        <button class="btn" id="syncNow">SYNC NOW</button>
+        <button class="btn dim" id="syncOff">DISCONNECT</button>
+      </div>
+      <div class="hint" id="syncMsg">Your token is kept in this browser only and is never written to the synced file. Enter it once on each device.</div>
+    </div>
+
+    <div class="card">
+      <div class="hd">TEXT SIZE</div>
+      <div class="g3">
+        <button class="btn" id="ts1">CURRENT</button>
+        <button class="btn" id="ts2">MEDIUM</button>
+        <button class="btn" id="ts3">LARGE</button>
+      </div>
+      <div class="hint">Applies to this device only, so your phone and PC can be set differently. The boot screen is not affected.</div>
+    </div>
+
+    <div class="card">
+      <div class="hd">BACKUP</div>
+      <div class="g2">
+        <button class="btn" id="expBtn">EXPORT FILE</button>
+        <button class="btn" id="impBtn">IMPORT FILE</button>
+      </div>
+      <input type="file" id="impFile" accept=".json,application/json" style="display:none">
+      <div class="hint" id="backupMsg">Import merges into what is already here, newest entry per day wins. It cannot wipe your log.</div>
+    </div>
+
+    <div class="hint" style="text-align:center;margin:14px 0 4px;color:var(--line)">NUTRITION TERMINAL v<span id="verTxt"></span></div>
+  </div><!-- /pgSet -->
+
+  </div><!-- /scroll -->
+
+  <button id="fab" aria-label="Add food">+</button>
+
+  <div id="tabbar">
+    <button class="tb on" data-pg="today"><span class="ic">&#9632;</span>TODAY</button>
+    <button class="tb" data-pg="log"><span class="ic">&#8801;</span>LOG</button>
+    <button class="tb" data-pg="prep"><span class="ic">&#9670;</span>PREP</button>
+    <button class="tb" data-pg="stats"><span class="ic">&#9636;</span>STATS</button>
+    <button class="tb" data-pg="set"><span class="ic">&#9881;</span>SET</button>
   </div>
 
   <div class="modal" id="foodModal">
     <div class="sheet">
       <h3><span id="foodTitle">ADD FOOD</span><button class="btn sm" id="foodX">CLOSE</button></h3>
+
+      <div id="recentsBox" style="display:none;margin-bottom:12px">
+        <div class="hd" style="margin-bottom:7px">RECENTS <span>tap to log</span></div>
+        <div class="chips" id="recents"></div>
+      </div>
+
       <div class="tabs">
         <button class="btn on" id="tabPrep">PREP</button>
         <button class="btn" id="tabFav">FOODS</button>
@@ -341,7 +626,7 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px
 
       <div id="panePrep">
         <div id="preplist"></div>
-        <div class="hint">Meal prep entries are managed in Settings.</div>
+        <div class="hint">Meal prep entries are built on the PREP tab.</div>
       </div>
 
       <div id="paneFav" style="display:none">
@@ -465,113 +750,13 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px
     </div>
   </div>
 
-  <div class="modal" id="setModal">
-    <div class="sheet">
-      <h3><span>SETTINGS</span><button class="btn sm" id="setX">CLOSE</button></h3>
-      <div class="fld"><label>DAILY CALORIE TARGET</label><input type="number" id="sCal" inputmode="numeric"></div>
-      <div class="g4">
-        <div class="fld"><label>PROT g</label><input type="number" id="sP" inputmode="numeric"></div>
-        <div class="fld"><label>CARB g</label><input type="number" id="sC" inputmode="numeric"></div>
-        <div class="fld"><label>FAT g</label><input type="number" id="sF" inputmode="numeric"></div>
-        <div class="fld"><label>FIBRE g</label><input type="number" id="sB" inputmode="numeric"></div>
-      </div>
-      <div class="fld"><label>DAILY WATER GOAL (ml)</label><input type="number" id="sW" inputmode="numeric"></div>
-      <button class="btn full" id="setSave" style="margin-bottom:9px">SAVE</button>
-      <div class="hd" style="margin-top:16px">SYNC <span id="syncState">NOT CONNECTED</span></div>
-      <div class="fld"><label>GITHUB TOKEN (classic, gist scope)</label><input type="password" id="sTok" placeholder="ghp_..." autocomplete="off"></div>
-      <div class="fld"><label>GIST ID</label><input type="text" id="sGist" placeholder="leave blank and press CREATE" autocomplete="off"></div>
-      <div class="g2" style="margin-bottom:7px">
-        <button class="btn" id="syncCreate">CREATE NEW</button>
-        <button class="btn" id="syncConnect">CONNECT</button>
-      </div>
-      <div class="g2">
-        <button class="btn" id="syncNow">SYNC NOW</button>
-        <button class="btn dim" id="syncOff">DISCONNECT</button>
-      </div>
-      <div class="hint" id="syncMsg">Your token is kept in this browser only and is never written to the synced file. Enter it once on each device.</div>
-
-      <div class="hd" style="margin-top:16px">TEXT SIZE</div>
-      <div class="g3">
-        <button class="btn" id="ts1">CURRENT</button>
-        <button class="btn" id="ts2">MEDIUM</button>
-        <button class="btn" id="ts3">LARGE</button>
-      </div>
-      <div class="hint">Applies to this device only, so your phone and PC can be set differently. The boot screen is not affected.</div>
-
-      <div class="hd" style="margin-top:16px">MEAL PREP <span id="prepCount">0</span></div>
-      <div class="tabs">
-        <button class="btn on" id="tabRecipe">BUILD RECIPE</button>
-        <button class="btn" id="tabQuick">QUICK ENTRY</button>
-      </div>
-
-      <div id="paneRecipe">
-        <div class="fld"><label>RECIPE NAME</label><input type="text" id="rName" placeholder="chicken and rice batch"></div>
-        <div id="inglist" style="max-height:190px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
-        <div class="g3" style="margin-top:7px">
-          <button class="btn" id="ingScan">SCAN</button>
-          <button class="btn" id="ingFav">MY FOODS</button>
-          <button class="btn" id="ingNew">TYPE IN</button>
-        </div>
-        <div id="ingPick" style="display:none;margin-top:7px">
-          <div class="fld"><input type="text" id="ingSearch" placeholder="search saved foods" autocomplete="off"></div>
-          <div id="ingFavList" style="max-height:150px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
-        </div>
-        <div class="hint" id="batchTot" style="margin-top:9px"></div>
-        <div class="hint" id="batchWarn" style="margin-top:3px"></div>
-        <div class="fld" style="margin-top:9px"><label>HOW MANY SERVES DOES THIS MAKE?</label><input type="number" id="rServes" inputmode="numeric" placeholder="5"></div>
-        <div class="hint" id="serveOut" style="margin-top:0"></div>
-        <div class="g2" style="margin-top:9px">
-          <button class="btn" id="recipeSave">SAVE MEAL PREP</button>
-          <button class="btn dim" id="recipeClear">CLEAR</button>
-        </div>
-        <button class="btn full dim" id="recipeDel" style="display:none;margin-top:6px">DELETE THIS MEAL PREP</button>
-      </div>
-
-      <div id="paneQuick" style="display:none">
-      <div class="fld"><input type="text" id="pName" placeholder="chicken and rice bowl"></div>
-      <div class="fld"><label>WEIGHT OF ONE SERVE (g)</label><input type="number" id="pG" inputmode="numeric" placeholder="450"></div>
-      <div class="fld">
-        <label>ENERGY FOR THAT WEIGHT</label>
-        <div style="display:flex;gap:5px">
-          <input type="number" id="pCal" inputmode="numeric" placeholder="energy">
-          <button class="btn on" id="pUnitCal" style="flex:0 0 46px">CAL</button>
-          <button class="btn" id="pUnitKj" style="flex:0 0 46px">kJ</button>
-        </div>
-      </div>
-      <div class="g4">
-        <div class="fld"><label>PROT g</label><input type="number" id="pP" inputmode="decimal" placeholder="opt"></div>
-        <div class="fld"><label>CARB g</label><input type="number" id="pC" inputmode="decimal" placeholder="opt"></div>
-        <div class="fld"><label>FAT g</label><input type="number" id="pF" inputmode="decimal" placeholder="opt"></div>
-        <div class="fld"><label>FIBRE g</label><input type="number" id="pB" inputmode="decimal" placeholder="opt"></div>
-      </div>
-      <button class="btn full" id="prepAdd">ADD MEAL PREP</button>
-      </div>
-
-      <div id="prepManage" style="max-height:150px;overflow-y:auto;border:1px solid var(--line-faint);margin-top:9px"></div>
-      <div class="hint" id="prepMsg">These appear on the PREP tab when you add food, for one tap logging. Tap a recipe below to reopen its ingredients.</div>
-
-      <div class="hd" style="margin-top:16px">BACKUP</div>
-      <div class="g2">
-        <button class="btn" id="expBtn">EXPORT FILE</button>
-        <button class="btn" id="impBtn">IMPORT FILE</button>
-      </div>
-      <input type="file" id="impFile" accept=".json,application/json" style="display:none">
-      <div class="hint" id="backupMsg">Import merges into what is already here, newest entry per day wins. It cannot wipe your log.</div>
-
-      <div class="hd" style="margin-top:16px">MY FOODS <span id="favCount">0</span></div>
-      <div id="favManage" style="max-height:150px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
-
-      <div class="hint" style="text-align:center;margin-top:16px;color:var(--line)">NUTRITION TERMINAL v<span id="verTxt"></span></div>
-    </div>
-  </div>
-
 </div>
 
 <script>
 (function(){
 "use strict";
 
-var VERSION = "2.3.0";
+var VERSION = "3.0.0";
 var NOVA = ["", "ANIMAL", "PLANT", "SUGAR & SALT", "INDUSTRIAL", "MOUTHFEEL", "PRESERVATIVE", "COLOUR & FLAVOUR"];
 var DIRTY = [4,5,6,7];
 var OLD2NEW = {1:2,2:3,3:4,4:4};
@@ -829,9 +1014,201 @@ function render(){
   $("stk").textContent = n + (n === 1 ? " day" : " days");
 
   $("logTot").textContent = r(t.cal) + " CAL";
+  $("copyYest").style.display = totals(shift(viewDate, -1)).cal > 0 ? "" : "none";
+  resetCopy();
   renderLog(d);
   renderSlop();
-  renderChart();
+  if (page === "log") renderLogPage();
+  if (page === "stats") renderStats();
+}
+
+/* ---------- pages ---------- */
+var page = "today", range = 30, logView = "day", scrollMem = {};
+var PAGES = ["today","log","prep","stats","set"];
+var TITLES = { prep:"MEAL PREP", stats:"STATISTICS", set:"SETTINGS" };
+
+function go(to){
+  if (PAGES.indexOf(to) < 0) to = "today";
+  if (done) scrollMem[page] = $("scroll").scrollTop;
+  page = to;
+  for (var i = 0; i < PAGES.length; i++){
+    $("pg" + PAGES[i].charAt(0).toUpperCase() + PAGES[i].slice(1)).className =
+      "pg" + (PAGES[i] === to ? " on" : "");
+  }
+  var tbs = $("tabbar").children;
+  for (var j = 0; j < tbs.length; j++){
+    tbs[j].className = "tb" + (tbs[j].getAttribute("data-pg") === to ? " on" : "");
+  }
+  var dated = (to === "today" || to === "log");
+  $("datebar").style.display = dated ? "" : "none";
+  $("pgTitle").style.display = dated ? "none" : "";
+  if (!dated) $("pgTitle").textContent = TITLES[to];
+  $("fab").className = dated ? "" : "hide";
+
+  if (to === "set") fillSettings();
+  if (to === "prep"){ renderPrepManage(); renderFavManage(); renderIngs(); }
+  if (to === "log") renderLogPage();
+  if (to === "stats") renderStats();
+  $("scroll").scrollTop = scrollMem[to] || 0;
+}
+
+/* ---------- log page ---------- */
+var BANDS = [
+  ["MORNING", 0, 11],
+  ["MIDDAY", 11, 15],
+  ["AFTERNOON", 15, 18],
+  ["EVENING", 18, 24]
+];
+function bandOf(t){
+  if (!t) return -1;
+  var h = parseInt(String(t).slice(0, 2), 10);
+  if (!isFinite(h)) return -1;
+  for (var i = 0; i < BANDS.length; i++) if (h >= BANDS[i][1] && h < BANDS[i][2]) return i;
+  return -1;
+}
+function macBits(it){
+  var b = [];
+  if (!blank(it.p)) b.push("P" + r1(it.p));
+  if (!blank(it.c)) b.push("C" + r1(it.c));
+  if (!blank(it.f)) b.push("F" + r1(it.f));
+  return b.join(" ");
+}
+function grpRow(label, right){
+  var g = document.createElement("div");
+  g.className = "grp";
+  var a = document.createElement("span"); a.textContent = label;
+  var b = document.createElement("b"); b.textContent = right;
+  g.appendChild(a); g.appendChild(b);
+  return g;
+}
+function detailRow(main, sub, right, overFlag, onTap){
+  var row = document.createElement("div");
+  row.className = "drow";
+  var d = document.createElement("span");
+  d.className = "dd";
+  var m = document.createElement("div"); m.textContent = main; d.appendChild(m);
+  if (sub){ var e = document.createElement("em"); e.textContent = sub; d.appendChild(e); }
+  var c = document.createElement("span");
+  c.className = "dc" + (overFlag ? " over" : "");
+  c.textContent = right;
+  row.appendChild(d); row.appendChild(c);
+  if (onTap) row.onclick = onTap; else row.style.cursor = "default";
+  return row;
+}
+function renderLogPage(){
+  $("lvDay").style.display = logView === "day" ? "" : "none";
+  $("lvWeek").style.display = logView === "week" ? "" : "none";
+  $("lvFind").style.display = logView === "find" ? "" : "none";
+  var segs = $("logSeg").children;
+  for (var i = 0; i < segs.length; i++){
+    segs[i].className = segs[i].getAttribute("data-lv") === logView ? "on" : "";
+  }
+  if (logView === "day") renderDayGroups();
+  else if (logView === "week") renderWeek();
+  else renderFind();
+}
+function renderDayGroups(){
+  var d = day(viewDate), box = $("dayGroups"), t = totals(viewDate);
+  box.textContent = "";
+  $("lvDayTot").textContent = r(t.cal) + " CAL";
+  if (!d.items.length){
+    var e = document.createElement("div");
+    e.className = "empty"; e.textContent = "NOTHING LOGGED THIS DAY";
+    box.appendChild(e);
+    $("dayHint").textContent = "";
+    return;
+  }
+  var buckets = [[],[],[],[],[]];
+  d.items.forEach(function(it){
+    var b = bandOf(it.t);
+    buckets[b < 0 ? 4 : b].push(it);
+  });
+  var names = ["MORNING","MIDDAY","AFTERNOON","EVENING","NO TIME"];
+  for (var i = 0; i < 5; i++){
+    if (!buckets[i].length) continue;
+    var sum = 0;
+    buckets[i].forEach(function(it){ sum += num(it.cal); });
+    box.appendChild(grpRow(names[i], r(sum) + " CAL"));
+    buckets[i].forEach(function(it){
+      var sub = (it.t ? it.t + "  " : "") + (it.g ? r(it.g) + "g" : "");
+      var mb = macBits(it);
+      if (mb) sub += (sub ? "  " : "") + mb;
+      box.appendChild(detailRow(it.name, sub, r(num(it.cal)), false, null));
+    });
+  }
+  var lastB = -1;
+  d.items.forEach(function(it){ var b = bandOf(it.t); if (b > lastB) lastB = b; });
+  var left = db.settings.calTarget - t.cal;
+  var pShort = db.settings.protein - t.p;
+  var bits = [];
+  if (left > 0) bits.push(r(left) + " cal remaining");
+  if (pShort > 0) bits.push(r(pShort) + " g protein short");
+  $("dayHint").textContent = bits.length ? bits.join(", ") + "." : "Target met on calories and protein.";
+}
+function renderWeek(){
+  var box = $("weekList"), s = db.settings, sum = 0, n = 0;
+  box.textContent = "";
+  for (var i = 0; i < 7; i++){
+    (function(){
+      var k = shift(viewDate, -i), t = totals(k), d = db.days[k];
+      if (t.cal > 0){ sum += t.cal; n++; }
+      var names = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
+      var lab = names[dateOf(k).getDay()] + " " + k.slice(8) + "." + k.slice(5,7);
+      var cnt = d && d.items.length ? d.items.length + (d.items.length === 1 ? " item" : " items") : "nothing logged";
+      if (d && d.trained === true) cnt += "  ·  trained";
+      var row = detailRow(lab + (k === todayKey() ? "  (today)" : ""), cnt,
+        t.cal > 0 ? r(t.cal) : "—", t.cal > s.calTarget, function(){
+          viewDate = k; go("today"); render();
+        });
+      if (k === viewDate) row.className = "drow now";
+      box.appendChild(row);
+    })();
+  }
+  $("weekTot").textContent = n ? "AVG " + r(sum / n) + " CAL" : "";
+}
+function renderFind(){
+  var q = $("findIn").value.toLowerCase().trim(), box = $("searchList");
+  box.textContent = "";
+  if (q.length < 2){
+    var e = document.createElement("div");
+    e.className = "empty"; e.textContent = "TYPE AT LEAST TWO LETTERS";
+    box.appendChild(e);
+    $("findHint").textContent = "Searches every day in your log by name.";
+    return;
+  }
+  var hits = [], keys = [];
+  for (var k in db.days) keys.push(k);
+  keys.sort(); keys.reverse();
+  for (var i = 0; i < keys.length && hits.length < 60; i++){
+    var items = db.days[keys[i]].items;
+    for (var j = 0; j < items.length; j++){
+      if (String(items[j].name || "").toLowerCase().indexOf(q) >= 0){
+        hits.push({ k: keys[i], it: items[j] });
+        if (hits.length >= 60) break;
+      }
+    }
+  }
+  if (!hits.length){
+    var e2 = document.createElement("div");
+    e2.className = "empty"; e2.textContent = "NO MATCH";
+    box.appendChild(e2);
+    $("findHint").textContent = "";
+    return;
+  }
+  var tot = 0;
+  hits.forEach(function(h){
+    tot += num(h.it.cal);
+    (function(){
+      var key = h.k;
+      var sub = key.slice(8) + "." + key.slice(5,7) + "." + key.slice(2,4) +
+                (h.it.t ? "  " + h.it.t : "") + (h.it.g ? "  " + r(h.it.g) + "g" : "");
+      box.appendChild(detailRow(h.it.name, sub, r(num(h.it.cal)), false, function(){
+        viewDate = key; go("today"); render();
+      }));
+    })();
+  });
+  $("findHint").textContent = hits.length + (hits.length === 60 ? "+ matches" : " matches") +
+    ", averaging " + r(tot / hits.length) + " cal. Tap one to open that day.";
 }
 
 function renderLog(d){
@@ -957,35 +1334,249 @@ function renderSlop(){
   el.style.color = s.adds.length ? "var(--warn)" : "var(--grn-fade)";
 }
 
-function renderChart(){
-  var s = db.settings, box = $("chart"), ax = $("xax");
+function rangeStats(n){
+  var s = db.settings, out = { keys:[], vals:[], max:s.calTarget, sum:0, logged:0,
+    hit:0, over:0, trained:0, p:0, c:0, f:0, pDays:0, best:null, worst:null,
+    tp:0, tpDays:0, rp:0, rpDays:0 };
+  for (var i = n - 1; i >= 0; i--){
+    var k = shift(viewDate, -i), d = db.days[k], t = d ? totals(k) : null;
+    var cal = t ? t.cal : 0;
+    out.keys.push(k); out.vals.push(cal);
+    if (cal > out.max) out.max = cal;
+    if (cal > 0){
+      out.sum += cal; out.logged++;
+      if (cal > s.calTarget) out.over++;
+      else if (s.calTarget > 0 && cal >= s.calTarget * 0.9) out.hit++;
+      if (out.best === null || cal > out.best[1]) out.best = [k, cal];
+      if (out.worst === null || cal < out.worst[1]) out.worst = [k, cal];
+      if (t.p > 0){ out.p += t.p; out.pDays++;
+        if (d.trained === true){ out.tp += t.p; out.tpDays++; }
+        else { out.rp += t.p; out.rpDays++; }
+      }
+      out.c += t.c; out.f += t.f;
+    }
+    if (d && d.trained === true) out.trained++;
+  }
+  return out;
+}
+
+function renderStats(){
+  var s = db.settings, st = rangeStats(range);
+  var box = $("chart"), ax = $("xax");
   while (box.children.length > 1) box.removeChild(box.lastChild);
   ax.textContent = "";
 
-  var vals = [], keys = [], max = s.calTarget;
-  for (var i = 6; i >= 0; i--){
-    var k = shift(viewDate, -i);
-    var c = db.days[k] ? totals(k).cal : 0;
-    keys.push(k); vals.push(c);
-    if (c > max) max = c;
-  }
   var names = ["SUN","MON","TUE","WED","THU","FRI","SAT"];
-  for (var j = 0; j < 7; j++){
+  var gap = range <= 7 ? 4 : (range <= 30 ? 2 : 1);
+  box.style.gap = gap + "px";
+  ax.style.gap = gap + "px";
+  for (var j = 0; j < st.keys.length; j++){
     var col = document.createElement("div");
     col.className = "col";
+    var v = st.vals[j], k = st.keys[j];
     var b = document.createElement("div");
-    b.className = "cb" + (vals[j] === 0 ? " zero" : (vals[j] > s.calTarget ? " over" : (keys[j] === viewDate ? " today" : "")));
-    b.style.height = max > 0 ? Math.max(1, (vals[j] / max) * 100) + "%" : "1px";
-    b.title = keys[j] + ": " + r(vals[j]) + " cal";
+    b.className = "cb" + (v === 0 ? " zero" : (v > s.calTarget ? " over" : (k === viewDate ? " today" : "")));
+    b.style.height = st.max > 0 ? Math.max(1, (v / st.max) * 100) + "%" : "1px";
+    b.title = k + ": " + r(v) + " cal";
     col.appendChild(b);
     box.appendChild(col);
-    var sp = document.createElement("span");
-    sp.textContent = names[dateOf(keys[j]).getDay()];
-    ax.appendChild(sp);
+    if (range <= 7){
+      var sp = document.createElement("span");
+      sp.textContent = names[dateOf(k).getDay()];
+      ax.appendChild(sp);
+    }
   }
-  $("tline").style.bottom = max > 0 ? (s.calTarget / max) * 100 + "%" : "100%";
+  if (range > 7){
+    var marks = ["-" + range + "d", "-" + r(range / 2) + "d", "NOW"];
+    var aligns = ["left", "center", "right"];
+    for (var m = 0; m < 3; m++){
+      var ms = document.createElement("span");
+      ms.textContent = marks[m];
+      ms.style.textAlign = aligns[m];
+      ax.appendChild(ms);
+    }
+  }
+  $("tline").style.bottom = st.max > 0 ? (s.calTarget / st.max) * 100 + "%" : "100%";
 
+  var avg = st.logged ? r(st.sum / st.logged) : 0;
+  tiles($("statTiles"), [
+    [avg, " cal", "AVERAGE INTAKE", st.logged && avg > s.calTarget],
+    [st.logged ? st.logged : 0, "/" + range, "DAYS LOGGED", false],
+    [st.over, "/" + (st.logged || 0), "DAYS OVER TARGET", st.over > 0],
+    [st.trained, "/" + range, "SESSIONS TRAINED", false]
+  ]);
+
+  renderSplit(st);
+  renderHeat();
+  renderProtein(st);
   renderAvgs();
+  renderTopFoods();
+}
+function tiles(box, rows){
+  box.textContent = "";
+  rows.forEach(function(row){
+    var t = document.createElement("div"); t.className = "tile";
+    var v = document.createElement("div"); v.className = "tv" + (row[3] ? " over" : "");
+    v.appendChild(document.createTextNode(String(row[0])));
+    var u = document.createElement("u"); u.textContent = row[1];
+    v.appendChild(u);
+    var l = document.createElement("div"); l.className = "tl"; l.textContent = row[2];
+    t.appendChild(v); t.appendChild(l);
+    box.appendChild(t);
+  });
+}
+function renderSplit(st){
+  var kp = st.p * 4, kc = st.c * 4, kf = st.f * 9, tot = kp + kc + kf;
+  var leg = $("donutLeg"), bx = $("donutBox");
+  bx.textContent = ""; leg.textContent = "";
+  $("splitNote").textContent = range + " DAY";
+  if (!tot){
+    $("splitHint").textContent = "No macros recorded in this range.";
+    bx.appendChild(document.createElement("div"));
+    return;
+  }
+  var segs = [
+    ["PROTEIN", kp / tot * 100, "var(--grn)"],
+    ["CARBS", kc / tot * 100, "var(--grn-dim)"],
+    ["FAT", kf / tot * 100, "#1a5c30"]
+  ];
+  var NS = "http://www.w3.org/2000/svg", R = 27, C = 2 * Math.PI * R, off = 0;
+  var svg = document.createElementNS(NS, "svg");
+  svg.setAttribute("width", "68"); svg.setAttribute("height", "68");
+  svg.setAttribute("viewBox", "0 0 68 68");
+  segs.forEach(function(sg){
+    var ci = document.createElementNS(NS, "circle");
+    ci.setAttribute("cx", "34"); ci.setAttribute("cy", "34"); ci.setAttribute("r", "" + R);
+    ci.setAttribute("fill", "none"); ci.setAttribute("stroke", sg[2]); ci.setAttribute("stroke-width", "11");
+    ci.setAttribute("stroke-dasharray", (sg[1] / 100 * C) + " " + C);
+    ci.setAttribute("stroke-dashoffset", "" + (-off / 100 * C));
+    ci.setAttribute("transform", "rotate(-90 34 34)");
+    svg.appendChild(ci);
+    off += sg[1];
+  });
+  bx.appendChild(svg);
+  segs.forEach(function(sg){
+    var d = document.createElement("div");
+    var a = document.createElement("span");
+    var u = document.createElement("u"); u.style.background = sg[2];
+    a.appendChild(u); a.appendChild(document.createTextNode(sg[0]));
+    var b = document.createElement("b"); b.textContent = r(sg[1]) + "%";
+    d.appendChild(a); d.appendChild(b);
+    leg.appendChild(d);
+  });
+  var tp = db.settings.protein * 4, tc = db.settings.carbs * 4, tf = db.settings.fat * 9;
+  var tt = tp + tc + tf;
+  $("splitHint").textContent = tt
+    ? "Your targets split " + r(tp / tt * 100) + " / " + r(tc / tt * 100) + " / " + r(tf / tt * 100) +
+      ". Percentages are of energy, not grams."
+    : "Percentages are of energy, not grams.";
+}
+function renderHeat(){
+  var box = $("heat"), s = db.settings;
+  box.textContent = "";
+  // start on the Sunday on or before 49 days back, so the columns line up by weekday
+  var start = shift(viewDate, -49);
+  start = shift(start, -dateOf(start).getDay());
+  var over = 0, logged = 0, byDow = [0,0,0,0,0,0,0];
+  var heads = ["S","M","T","W","T","F","S"];
+  for (var h = 0; h < 7; h++){
+    var hd = document.createElement("i");
+    hd.className = "hh";
+    hd.textContent = heads[h];
+    box.appendChild(hd);
+  }
+  for (var i = 0; i < 56; i++){
+    var k = shift(start, i), el = document.createElement("i");
+    if (k > viewDate){ el.className = "fut"; box.appendChild(el); continue; }
+    var cal = db.days[k] ? totals(k).cal : 0, cls = "";
+    if (cal > 0){
+      logged++;
+      if (cal > s.calTarget){ cls = "ov"; over++; byDow[dateOf(k).getDay()]++; }
+      else if (s.calTarget > 0 && cal >= s.calTarget * 0.9) cls = "l3";
+      else if (s.calTarget > 0 && cal >= s.calTarget * 0.6) cls = "l2";
+      else cls = "l1";
+    }
+    if (cls) el.className = cls;
+    el.title = k + ": " + r(cal) + " cal";
+    box.appendChild(el);
+  }
+  var names = ["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+  var worst = 0;
+  for (var j = 1; j < 7; j++) if (byDow[j] > byDow[worst]) worst = j;
+  if (!logged) $("heatHint").textContent = "Nothing logged in the last eight weeks.";
+  else if (!over) $("heatHint").textContent = logged + " days logged, none over target.";
+  else $("heatHint").textContent = logged + " days logged, " + over + " over target. " +
+    names[worst] + " is the weak day, " + byDow[worst] + " of them.";
+}
+function renderProtein(st){
+  var s = db.settings, box = $("protBars");
+  box.textContent = "";
+  $("protNote").textContent = range + " DAY";
+  var avg = st.pDays ? st.p / st.pDays : 0;
+  var hitPct = 0, hitN = 0;
+  for (var i = 0; i < st.keys.length; i++){
+    var t = db.days[st.keys[i]] ? totals(st.keys[i]) : null;
+    if (t && t.cal > 0 && s.protein > 0 && t.p >= s.protein) hitN++;
+  }
+  hitPct = st.logged ? (hitN / st.logged) * 100 : 0;
+  var rows = [
+    ["AVG " + r(avg) + " g", s.protein > 0 ? Math.min(100, avg / s.protein * 100) : 0],
+    ["HIT TARGET", hitPct],
+    ["TRAIN DAYS " + (st.tpDays ? r(st.tp / st.tpDays) : 0) + " g",
+      s.protein > 0 && st.tpDays ? Math.min(100, (st.tp / st.tpDays) / s.protein * 100) : 0],
+    ["REST DAYS " + (st.rpDays ? r(st.rp / st.rpDays) : 0) + " g",
+      s.protein > 0 && st.rpDays ? Math.min(100, (st.rp / st.rpDays) / s.protein * 100) : 0]
+  ];
+  rows.forEach(function(row){
+    var wrap = document.createElement("div"); wrap.className = "srow";
+    var lab = document.createElement("span"); lab.className = "slab"; lab.textContent = row[0];
+    var bar = document.createElement("span"); bar.className = "sbar";
+    var fill = document.createElement("i"); fill.style.width = Math.max(0, Math.min(100, row[1])) + "%";
+    bar.appendChild(fill);
+    var val = document.createElement("span"); val.className = "sval"; val.textContent = r(row[1]) + "%";
+    wrap.appendChild(lab); wrap.appendChild(bar); wrap.appendChild(val);
+    box.appendChild(wrap);
+  });
+  var gap = s.protein - avg;
+  var dd = st.tpDays && st.rpDays ? r(st.tp / st.tpDays) - r(st.rp / st.rpDays) : 0;
+  var bits = [];
+  if (!st.pDays) bits.push("No protein recorded in this range.");
+  else {
+    bits.push(gap > 1 ? "Averaging " + r(gap) + " g short of target."
+      : (gap < -1 ? "Averaging " + r(-gap) + " g over target." : "Averaging on target."));
+    if (dd > 5) bits.push("Training days run " + r(dd) + " g higher than rest days.");
+    else if (dd < -5) bits.push("Training days run " + r(-dd) + " g lower than rest days.");
+  }
+  $("protHint").textContent = bits.join(" ");
+}
+function renderTopFoods(){
+  var box = $("topFoods"), map = {}, n = 0;
+  box.textContent = "";
+  $("topNote").textContent = range + " DAY";
+  for (var i = 0; i < range; i++){
+    var k = shift(viewDate, -i), d = db.days[k];
+    if (!d) continue;
+    for (var j = 0; j < d.items.length; j++){
+      var it = d.items[j], key = String(it.name || "").toLowerCase();
+      if (!key) continue;
+      if (!map[key]) map[key] = { name: it.name, n: 0, cal: 0, g: 0 };
+      map[key].n++; map[key].cal += num(it.cal); map[key].g += num(it.g);
+      n++;
+    }
+  }
+  if (!n){
+    var e = document.createElement("div");
+    e.className = "empty"; e.textContent = "NOTHING LOGGED IN THIS RANGE";
+    box.appendChild(e);
+    return;
+  }
+  var list = [];
+  for (var kk in map) list.push(map[kk]);
+  list.sort(function(a, b){ return b.n - a.n || b.cal - a.cal; });
+  list.slice(0, 6).forEach(function(f){
+    var sub = f.n + (f.n === 1 ? " log" : " logs") + (f.g ? "  ·  " + r(f.g) + "g total" : "");
+    box.appendChild(detailRow(f.name, sub, r(f.cal), false, null));
+  });
 }
 
 function avgOver(days){
@@ -1100,7 +1691,87 @@ function openFood(){
   tab(db.preps.length ? "prep" : (db.favourites.length ? "fav" : "new"));
   renderPreps();
   renderFavs();
+  renderRecents();
   $("foodModal").className = "modal on";
+}
+
+/* ---------- recents ---------- */
+function recentList(){
+  var map = {}, order = [];
+  for (var i = 0; i < 30; i++){
+    var k = shift(todayKey(), -i), d = db.days[k];
+    if (!d) continue;
+    for (var j = 0; j < d.items.length; j++){
+      var it = d.items[j], key = String(it.name || "").toLowerCase();
+      if (!key || !num(it.cal)) continue;
+      if (!map[key]){ map[key] = { it: it, n: 0, age: i }; order.push(key); }
+      map[key].n++;
+      if (i < map[key].age){ map[key].age = i; map[key].it = it; }
+    }
+  }
+  var list = order.map(function(k){ return map[k]; });
+  list.sort(function(a, b){ return b.n - a.n || a.age - b.age; });
+  return list.slice(0, 6);
+}
+function copyOf(src){
+  return {
+    name: src.name, g: src.g || null, cal: num(src.cal),
+    p: blank(src.p) ? null : num(src.p), c: blank(src.c) ? null : num(src.c),
+    f: blank(src.f) ? null : num(src.f), b: blank(src.b) ? null : num(src.b),
+    cats: (src.cats || [2]).slice(), adds: (src.adds || []).slice()
+  };
+}
+function renderRecents(){
+  var list = recentList(), box = $("recents");
+  box.textContent = "";
+  if (!list.length){ $("recentsBox").style.display = "none"; return; }
+  $("recentsBox").style.display = "";
+  list.forEach(function(e){
+    (function(){
+      var src = e.it;
+      var b = document.createElement("button");
+      b.className = "chip";
+      b.appendChild(document.createTextNode(src.name + " "));
+      var u = document.createElement("u");
+      u.textContent = src.g ? r(src.g) + " g" : r(num(src.cal)) + " cal";
+      b.appendChild(u);
+      b.onclick = function(){
+        var it = copyOf(src);
+        it.t = nowHM();
+        day(viewDate).items.push(it);
+        touch(viewDate); save();
+        $("foodModal").className = "modal";
+        render();
+      };
+      box.appendChild(b);
+    })();
+  });
+}
+
+/* ---------- copy yesterday ---------- */
+var copyArmed = false;
+function resetCopy(){
+  copyArmed = false;
+  var b = $("copyYest");
+  if (!b) return;
+  b.textContent = "↻ COPY YESTERDAY";
+  b.className = "btn full dim";
+}
+function copyYesterday(){
+  var from = day(shift(viewDate, -1)), to = day(viewDate);
+  if (!from.items.length) return;
+  if (to.items.length && !copyArmed){
+    copyArmed = true;
+    $("copyYest").textContent = "COPY ANYWAY? ADDS " + from.items.length;
+    $("copyYest").className = "btn full";
+    return;
+  }
+  for (var i = 0; i < from.items.length; i++){
+    var it = copyOf(from.items[i]);
+    it.t = from.items[i].t || nowHM();
+    to.items.push(it);
+  }
+  touch(viewDate); save(); resetCopy(); render();
 }
 function tab(which){
   $("panePrep").style.display = which === "prep" ? "" : "none";
@@ -1179,7 +1850,7 @@ function pickRow(item, current, onPick){
 }
 function needsWeightMsg(item){
   if (!item.g){
-    setFoodMsg(item.name + " has no serving weight yet. Open Settings, tap it, and set the weight its numbers refer to.", true);
+    setFoodMsg(item.name + " has no serving weight yet. Open the PREP tab, tap it, and set the weight its numbers refer to.", true);
   } else {
     setFoodMsg("Set the grams, then add to your log.", false);
   }
@@ -1265,18 +1936,15 @@ function flash(el){
 }
 
 /* ---------- settings ---------- */
-function openSettings(){
+function fillSettings(){
   var s = db.settings;
   $("sCal").value = s.calTarget; $("sP").value = s.protein; $("sC").value = s.carbs;
   $("sF").value = s.fat; $("sB").value = s.fibre; $("sW").value = s.water;
   $("sTok").value = cfg.token; $("sGist").value = cfg.gist;
   $("verTxt").textContent = VERSION;
+  $("setMsg").textContent = "";
   renderSyncState();
   if (cfg.err) setSyncMsg(cfg.err, true);
-  renderFavManage();
-  renderPrepManage();
-  renderIngs();
-  $("setModal").className = "modal on";
 }
 function renderFavManage(){
   var box = $("favManage");
@@ -1313,7 +1981,26 @@ $("wClr").onclick = function(){ day(viewDate).water = 0; touch(viewDate); save()
 $("tYes").onclick = function(){ var d = day(viewDate); d.trained = d.trained === true ? null : true; touch(viewDate); save(); render(); };
 $("tNo").onclick = function(){ var d = day(viewDate); d.trained = d.trained === false ? null : false; touch(viewDate); save(); render(); };
 
-$("addFood").onclick = function(){ openFood(); };
+$("fab").onclick = function(){ openFood(); };
+
+for (var ti = 0; ti < $("tabbar").children.length; ti++){
+  (function(btn){ btn.onclick = function(){ go(btn.getAttribute("data-pg")); }; })($("tabbar").children[ti]);
+}
+for (var li = 0; li < $("logSeg").children.length; li++){
+  (function(btn){ btn.onclick = function(){ logView = btn.getAttribute("data-lv"); renderLogPage(); }; })($("logSeg").children[li]);
+}
+for (var ri = 0; ri < $("rangeSeg").children.length; ri++){
+  (function(btn){
+    btn.onclick = function(){
+      range = parseInt(btn.getAttribute("data-rg"), 10);
+      var sib = $("rangeSeg").children;
+      for (var q = 0; q < sib.length; q++) sib[q].className = sib[q] === btn ? "on" : "";
+      renderStats();
+    };
+  })($("rangeSeg").children[ri]);
+}
+$("findIn").oninput = renderFind;
+$("copyYest").onclick = copyYesterday;
 
 $("tabPrep").onclick = function(){ tab("prep"); };
 $("tabFav").onclick = function(){ tab("fav"); };
@@ -1328,8 +2015,6 @@ $("ts1").onclick = function(){ setScale(1); };
 $("ts2").onclick = function(){ setScale(1.25); };
 $("ts3").onclick = function(){ setScale(1.45); };
 
-$("openSet").onclick = openSettings;
-$("setX").onclick = function(){ $("setModal").className = "modal"; };
 $("setSave").onclick = function(){
   var s = db.settings;
   s.calTarget = Math.max(0, r(num($("sCal").value))) || DEF.calTarget;
@@ -1340,7 +2025,8 @@ $("setSave").onclick = function(){
   s.water = Math.max(0, r(num($("sW").value))) || DEF.water;
   touchSettings();
   save();
-  $("setModal").className = "modal";
+  $("setMsg").textContent = "Saved.";
+  $("setMsg").style.color = "var(--grn-dim)";
   render();
 };
 
@@ -1355,7 +2041,6 @@ document.addEventListener("keydown", function(e){
     if ($("ingModal").className.indexOf("on") >= 0){ closeIng(); return; }
     if ($("editModal").className.indexOf("on") >= 0){ $("editModal").className = "modal"; editing = null; return; }
     $("foodModal").className = "modal";
-    $("setModal").className = "modal";
   }
 });
 
@@ -1464,7 +2149,7 @@ function sync(silent){
     if (changed){
       try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){}
       render();
-      if ($("setModal").className.indexOf("on") >= 0){ renderFavManage(); renderPrepManage(); }
+      if (page === "prep"){ renderFavManage(); renderPrepManage(); }
       if ($("foodModal").className.indexOf("on") >= 0){ renderFavs(); renderPreps(); }
     }
     if (changed || localDirty || !remote) return pushNow();
@@ -2591,6 +3276,7 @@ function paint(text, author){
 
 try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){}
 applyScale();
+go("today");
 render();
 refreshStatus();
 if (connected()) sync(true);
