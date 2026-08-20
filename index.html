@@ -597,6 +597,11 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
       <div class="hint" id="backupMsg">Import merges into what is already here, newest entry per day wins. It cannot wipe your log.</div>
     </div>
 
+    <div class="card">
+      <div class="hd">REMEMBERED BARCODES <span id="codeCount">0</span></div>
+      <div class="hint" id="codeMsg"></div>
+    </div>
+
     <div class="hint" style="text-align:center;margin:14px 0 4px;color:var(--line)">NUTRITION TERMINAL v<span id="verTxt"></span></div>
   </div><!-- /pgSet -->
 
@@ -736,9 +741,21 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
         <div class="fld"><label>OR TYPE THE NUMBER</label>
           <div style="display:flex;gap:5px">
             <input type="text" id="manIn" inputmode="numeric" placeholder="9300675024235" autocomplete="off">
-            <button class="btn" id="manGo" style="flex:0 0 72px">LOOK UP</button>
+            <button class="btn" id="manGo" style="flex:0 0 86px">LOOK UP</button>
           </div>
         </div>
+      </div>
+
+      <div id="findPane" style="display:none;margin-top:11px">
+        <div class="fld"><label>OR SEARCH BY NAME</label>
+          <div style="display:flex;gap:5px">
+            <input type="text" id="offSearch" placeholder="tim tam original" autocomplete="off">
+            <button class="btn" id="offGo" style="flex:0 0 86px">SEARCH</button>
+          </div>
+        </div>
+        <div id="offList" style="max-height:170px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
+        <div class="hint" id="offHint"></div>
+        <button class="btn full dim" id="offManual" style="margin-top:9px">TYPE THE LABEL VALUES IN</button>
       </div>
 
       <div id="gramsPane" style="display:none;margin-top:11px">
@@ -749,6 +766,7 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
         </div>
         <div id="gramsPreview" class="hint"></div>
         <button class="btn full" id="gramsOk" style="margin-top:7px">USE THIS</button>
+        <button class="btn full dim" id="gramsWrong" style="margin-top:6px">NOT THIS? TYPE IT IN</button>
       </div>
     </div>
   </div>
@@ -759,7 +777,7 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
 (function(){
 "use strict";
 
-var VERSION = "3.0.1";
+var VERSION = "3.1.0";
 var NOVA = ["", "ANIMAL", "PLANT", "SUGAR & SALT", "INDUSTRIAL", "MOUTHFEEL", "PRESERVATIVE", "COLOUR & FLAVOUR"];
 var DIRTY = [4,5,6,7];
 var OLD2NEW = {1:2,2:3,3:4,4:4};
@@ -841,6 +859,15 @@ function normalise(d){
     }
   }
   if (!d.tombs || typeof d.tombs !== "object") d.tombs = {};
+  if (!d.codes || typeof d.codes !== "object") d.codes = {};
+  for (var ck in d.codes){
+    var ce = d.codes[ck];
+    if (!ce || typeof ce !== "object" || typeof ce.cal !== "number"){ delete d.codes[ck]; continue; }
+    if (typeof ce.ts !== "number") ce.ts = 0;
+    if (typeof ce.g !== "number" || ce.g <= 0) ce.g = 100;
+    if (!Array.isArray(ce.adds)) ce.adds = [];
+    if (!Array.isArray(ce.cats) || !ce.cats.length) ce.cats = [4];
+  }
   return d;
 }
 function toCal(v, isKj){ return isKj ? v / KJ : v; }
@@ -1918,6 +1945,10 @@ function commitFood(){
       p: optNum($("fP")), c: optNum($("fC")), f: optNum($("fF")), b: optNum($("fB")),
       cats: (scanned ? scannedCats.slice() : classifyName(name)), adds: scannedAdds.slice()
     };
+    if (scanned){
+      rememberCode(scanned, { name:name, g:ng, cal:cal, p:item.p, c:item.c, f:item.f, b:item.b,
+                              cats:item.cats, adds:scannedAdds });
+    }
     if ($("fSave").checked){
       var fav = { id:newId(), name:name, g:ng, cal:cal, p:item.p, c:item.c, f:item.f, b:item.b,
                   cats:item.cats.slice(), adds:scannedAdds.slice(), ts:Date.now() };
@@ -1939,6 +1970,14 @@ function flash(el){
 }
 
 /* ---------- settings ---------- */
+function renderCodeCount(){
+  var n = 0;
+  for (var bc in db.codes) n++;
+  $("codeCount").textContent = n;
+  $("codeMsg").textContent = n
+    ? "Every barcode you scan is kept here with whatever numbers ended up being right, and it syncs with your other devices. If one is wrong, scan it again and press NOT THIS? TYPE IT IN to overwrite it."
+    : "Nothing yet. Every barcode you scan gets kept here, so a product the public database does not have only needs typing in once.";
+}
 function fillSettings(){
   var s = db.settings;
   $("sCal").value = s.calTarget; $("sP").value = s.protein; $("sC").value = s.carbs;
@@ -1946,6 +1985,7 @@ function fillSettings(){
   $("sTok").value = cfg.token; $("sGist").value = cfg.gist;
   $("verTxt").textContent = VERSION;
   $("setMsg").textContent = "";
+  renderCodeCount();
   renderSyncState();
   if (cfg.err) setSyncMsg(cfg.err, true);
 }
@@ -2085,7 +2125,7 @@ function gh(path, opts){
 }
 
 function payload(){
-  return { v:2, sv:3, settings:db.settings, favourites:db.favourites, preps:db.preps, days:db.days, tombs:db.tombs };
+  return { v:2, sv:3, settings:db.settings, favourites:db.favourites, preps:db.preps, days:db.days, tombs:db.tombs, codes:db.codes };
 }
 
 function merge(remote){
@@ -2122,6 +2162,11 @@ function merge(remote){
   db.favourites = mergeList(db.favourites, remote.favourites);
   db.preps = mergeList(db.preps, remote.preps);
 
+  for (var bc in remote.codes){
+    var theirs = remote.codes[bc], ours = db.codes[bc];
+    if (!ours || (theirs.ts || 0) > (ours.ts || 0)){ db.codes[bc] = theirs; changed = true; }
+  }
+
   return changed;
 }
 
@@ -2153,6 +2198,7 @@ function sync(silent){
       try { localStorage.setItem(KEY, JSON.stringify(db)); } catch(e){}
       render();
       if (page === "prep"){ renderFavManage(); renderPrepManage(); }
+      if (page === "set") renderCodeCount();
       if ($("foodModal").className.indexOf("on") >= 0){ renderFavs(); renderPreps(); }
     }
     if (changed || localDirty || !remote) return pushNow();
@@ -2321,6 +2367,7 @@ function manageRow(item, kind){
 /* ---------- barcode ---------- */
 var SCANLIB = "https://cdn.jsdelivr.net/npm/html5-qrcode@2.3.8/html5-qrcode.min.js";
 var scanner = null, libLoading = null, per100 = null, scanTarget = "food";
+var missedCode = null, ingCode = null;
 
 function setScanMsg(msg, bad){
   var el = $("scanMsg");
@@ -2342,6 +2389,7 @@ function loadLib(){
 function closeScan(){
   $("scanModal").className = "modal";
   $("gramsPane").style.display = "none";
+  $("findPane").style.display = "none";
   per100 = null;
   if (scanner){
     try { scanner.stop().then(function(){ try { scanner.clear(); } catch(e){} }); } catch(e){}
@@ -2361,6 +2409,10 @@ $("manGo").onclick = function(){
   onScan(code);
 };
 $("manIn").onkeydown = function(e){ if (e.key === "Enter") $("manGo").onclick(); };
+$("offGo").onclick = runOffSearch;
+$("offSearch").onkeydown = function(e){ if (e.key === "Enter") runOffSearch(); };
+$("offManual").onclick = typeItIn;
+$("gramsWrong").onclick = typeItIn;
 
 $("scanBtn").onclick = function(){ openScan("food"); };
 
@@ -2368,6 +2420,7 @@ function openScan(target){
   scanTarget = target || "food";
   $("scanModal").className = "modal on";
   $("gramsPane").style.display = "none";
+  $("findPane").style.display = "none";
   setScanMsg("Loading scanner...", false);
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     setScanMsg("No camera access in this browser. Type the barcode number below instead.", true);
@@ -2403,6 +2456,7 @@ function onScan(text){
   for (var i = 0; i < db.favourites.length; i++){
     if (db.favourites[i].barcode === code) localHit = db.favourites[i];
   }
+
   if (localHit){
     closeScan();
     if (scanTarget === "recipe"){
@@ -2424,7 +2478,73 @@ function onScan(text){
     }
     return;
   }
+
+  var known = db.codes[code];
+  if (known && known.g > 0){
+    per100 = per100From(known);
+    showFound(code, "Remembered from the last time you scanned this.", known.g);
+    return;
+  }
+
   lookup(code);
+}
+
+function per100From(e){
+  var k = 100 / e.g;
+  return {
+    name: e.name, cal: num(e.cal) * k,
+    p: blank(e.p) ? null : num(e.p) * k, c: blank(e.c) ? null : num(e.c) * k,
+    f: blank(e.f) ? null : num(e.f) * k, b: blank(e.b) ? null : num(e.b) * k,
+    cats: (e.cats || [4]).slice(), adds: (e.adds || []).slice(), unknown: 0
+  };
+}
+
+/* shared "we have a product, ask for grams" step */
+function showFound(code, msg, serveG){
+  missedCode = code;
+  var extra = "  ·  " + per100.cats.map(function(c){ return NOVA[c]; }).join(" + ");
+  $("prodName").textContent = per100.name + " — " + r(per100.cal) + " cal per 100g" + extra;
+  $("gIn").value = (isFinite(serveG) && serveG > 0) ? serveG : 100;
+  $("findPane").style.display = "none";
+  $("gramsPane").style.display = "";
+  setScanMsg(msg, false);
+  previewGrams();
+}
+
+/* remembered barcodes: every code we ever resolve, by hand or by API */
+function rememberCode(code, o){
+  if (!code || !o || typeof o.cal !== "number" || !isFinite(o.cal)) return;
+  db.codes[code] = {
+    name: o.name, g: (typeof o.g === "number" && o.g > 0) ? o.g : 100,
+    cal: o.cal,
+    p: blank(o.p) ? null : num(o.p), c: blank(o.c) ? null : num(o.c),
+    f: blank(o.f) ? null : num(o.f), b: blank(o.b) ? null : num(o.b),
+    cats: (o.cats && o.cats.length ? o.cats : [4]).slice(),
+    adds: (o.adds || []).slice(),
+    ts: Date.now()
+  };
+  save();
+}
+
+function productToPer100(p, code){
+  var n = p.nutriments || {};
+  var cal100 = energyPer100(n);
+  if (cal100 === null) return null;
+  var out = {
+    name: [p.brands, p.product_name].filter(Boolean).join(" ").trim() || ("Product " + code),
+    cal: cal100,
+    p: pick(n, "proteins_100g"), c: pick(n, "carbohydrates_100g"),
+    f: pick(n, "fat_100g"), b: pick(n, "fiber_100g"),
+    adds: badAdditives(p.additives_tags)
+  };
+  var ing = classifyIngredients(p.ingredients);
+  if (!ing.cats.length){
+    var ng = (p.nova_group >= 1 && p.nova_group <= 4) ? p.nova_group : 3;
+    ing.cats = [ng >= 3 ? 4 : 2];
+  }
+  out.cats = ing.cats;
+  out.unknown = ing.unknown;
+  return out;
 }
 
 function lookup(code){
@@ -2435,48 +2555,120 @@ function lookup(code){
     return res.json();
   }).then(function(j){
     if (!j || j.status === 0 || !j.product) throw new Error("notfound");
-    var p = j.product, n = p.nutriments || {};
-    var cal100 = energyPer100(n);
-    if (cal100 === null) throw new Error("noenergy");
-    per100 = {
-      name: [p.brands, p.product_name].filter(Boolean).join(" ").trim() || ("Product " + code),
-      cal: cal100,
-      p: pick(n, "proteins_100g"), c: pick(n, "carbohydrates_100g"),
-      f: pick(n, "fat_100g"), b: pick(n, "fiber_100g"),
-      adds: badAdditives(p.additives_tags)
-    };
-    var ing = classifyIngredients(p.ingredients);
-    if (!ing.cats.length){
-      var ng = (p.nova_group >= 1 && p.nova_group <= 4) ? p.nova_group : 3;
-      ing.cats = [ng >= 3 ? 4 : 2];
-    }
-    per100.cats = ing.cats;
-    per100.unknown = ing.unknown;
-    var extra = "  ·  " + per100.cats.map(function(c){ return NOVA[c]; }).join(" + ");
-    $("prodName").textContent = per100.name + " — " + r(per100.cal) + " cal per 100g" + extra;
-    var serve = parseFloat(String(p.serving_size || "").replace(/[^0-9.]/g, ""));
-    $("gIn").value = isFinite(serve) && serve > 0 ? serve : 100;
-    $("gramsPane").style.display = "";
-    setScanMsg("Found it. Check the weight below.", false);
-    previewGrams();
+    var got = productToPer100(j.product, code);
+    if (!got) throw new Error("noenergy");
+    per100 = got;
+    rememberCode(code, { name:per100.name, g:100, cal:per100.cal, p:per100.p, c:per100.c,
+                         f:per100.f, b:per100.b, cats:per100.cats, adds:per100.adds });
+    var serve = parseFloat(String(j.product.serving_size || "").replace(/[^0-9.]/g, ""));
+    showFound(code, "Found it. Check the weight below.", serve);
   })["catch"](function(e){
     var m = e && e.message;
-    if (m === "notfound") m = "Not in the database. Type the label values into the form and tick save, and next time this barcode will be recognised.";
-    else if (m === "noenergy") m = "Found the product but it has no energy value recorded. Enter it manually.";
-    else m = "Lookup failed: " + m + ". Enter it manually.";
+    if (m === "notfound") m = "Barcode " + code + " is not in the database. Try searching for it by name.";
+    else if (m === "noenergy") m = "Found the product but it has no energy value recorded.";
+    else m = "Lookup failed: " + m + ".";
     setScanMsg(m, true);
-    var failedCode = scanned;
-    setTimeout(function(){
-      closeScan();
-      if (scanTarget === "recipe"){
-        scanned = null;
-        openIngNew({}, null, [4], [], "Barcode " + failedCode + " gave nothing usable. Type the label values in, the weight being what goes into the batch.");
-        return;
-      }
-      setFoodMsg("Barcode " + failedCode + " noted, food type set to PROCESSED since it is packaged. Change it if that is wrong, fill in the values and tick save to remember it.", false);
-    }, 2600);
+    offerSearch(code);
   });
 }
+
+/* ---------- name search fallback ---------- */
+function offerSearch(code){
+  missedCode = code;
+  $("gramsPane").style.display = "none";
+  $("findPane").style.display = "";
+  $("offList").textContent = "";
+  $("offSearch").value = "";
+  $("offHint").textContent = "Plenty of products are listed under a different barcode, so a name search often finds the same thing. Otherwise type the label values in.";
+  $("offHint").style.color = "var(--grn-fade)";
+  try { $("offSearch").focus(); } catch(e){}
+}
+
+function offRows(j){
+  if (!j) return [];
+  if (Array.isArray(j.hits)) return j.hits;
+  if (Array.isArray(j.products)) return j.products;
+  return [];
+}
+function runOffSearch(){
+  var q = $("offSearch").value.trim();
+  if (q.length < 3){ $("offHint").textContent = "Type at least three letters."; $("offHint").style.color = "var(--warn)"; flash($("offSearch")); return; }
+  $("offList").textContent = "";
+  $("offHint").textContent = "Searching...";
+  $("offHint").style.color = "var(--grn-fade)";
+  var flds = "code,product_name,brands,quantity,serving_size,nutriments,nova_group,additives_tags,ingredients";
+  var a = "https://search.openfoodfacts.org/search?q=" + encodeURIComponent(q) + "&page_size=12";
+  var b = "https://world.openfoodfacts.org/cgi/search.pl?search_terms=" + encodeURIComponent(q) +
+          "&json=1&page_size=12&fields=" + flds;
+  function grab(u){
+    return fetch(u).then(function(res){
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    });
+  }
+  grab(a).then(offRows)["catch"](function(){ return grab(b).then(offRows); })
+    .then(function(list){ renderOffResults(list); })
+    ["catch"](function(e){
+      $("offHint").textContent = "Search is not reachable right now (" + (e && e.message ? e.message : "network") +
+        "). Type the label values in instead.";
+      $("offHint").style.color = "var(--bad)";
+    });
+}
+function renderOffResults(list){
+  var box = $("offList");
+  box.textContent = "";
+  var usable = [];
+  for (var i = 0; i < list.length; i++){
+    var got = productToPer100(list[i], list[i].code || "");
+    if (got) usable.push({ raw: list[i], per: got });
+  }
+  if (!usable.length){
+    var e = document.createElement("div");
+    e.className = "empty"; e.textContent = "NO USABLE MATCH";
+    box.appendChild(e);
+    $("offHint").textContent = "Nothing with an energy value came back. Type the label values in instead.";
+    $("offHint").style.color = "var(--grn-fade)";
+    return;
+  }
+  usable.forEach(function(u){
+    (function(){
+      var row = document.createElement("div");
+      row.className = "fav";
+      var a = document.createElement("span");
+      a.textContent = u.per.name;
+      var c = document.createElement("span");
+      c.className = "fc";
+      c.textContent = r(u.per.cal) + " cal/100g";
+      row.appendChild(a); row.appendChild(c);
+      row.onclick = function(){
+        per100 = u.per;
+        rememberCode(missedCode, { name:per100.name, g:100, cal:per100.cal, p:per100.p, c:per100.c,
+                                   f:per100.f, b:per100.b, cats:per100.cats, adds:per100.adds });
+        var sv = parseFloat(String(u.raw.serving_size || "").replace(/[^0-9.]/g, ""));
+        showFound(missedCode, "Matched by name. This barcode will fill itself in from now on.", sv);
+      };
+      box.appendChild(row);
+    })();
+  });
+  $("offHint").textContent = usable.length + " match" + (usable.length === 1 ? "" : "es") +
+    ". Picking one ties it to the barcode you scanned, so next time it fills itself in.";
+  $("offHint").style.color = "var(--grn-fade)";
+}
+
+function typeItIn(){
+  var failed = missedCode;
+  closeScan();
+  if (scanTarget === "recipe"){
+    scanned = null; ingCode = failed;
+    openIngNew({}, null, [4], [], "Barcode " + failed + " gave nothing. Type the label values in, the weight being what goes into the batch. It will be remembered against this barcode.");
+    return;
+  }
+  scanned = failed;
+  scannedCats = [4]; scannedAdds = [];
+  tab("new");
+  setFoodMsg("Barcode " + failed + " noted, food type set to PROCESSED since it is packaged. Fill in the values and it will be remembered against this barcode.", false);
+}
+
 function pick(n, key){ return typeof n[key] === "number" ? n[key] : null; }
 function energyPer100(n){
   if (typeof n["energy-kcal_100g"] === "number") return n["energy-kcal_100g"];
@@ -2511,7 +2703,7 @@ $("gramsOk").onclick = function(){
       cats: (per100.cats || [4]).slice(), adds: (per100.adds || []).slice(),
       basis: { cal: per100.cal, p: per100.p, c: per100.c, f: per100.f, b: per100.b }
     };
-    scanned = null;
+    scanned = null; ingCode = null;
     closeScan();
     addIng(ing);
     setPrepMsg("Added " + ing.name + " at " + r(g) + "g. Tap it in the list to change the weight.", false);
@@ -2788,6 +2980,11 @@ $("ingOk").onclick = function(){
     adds: ingAdds.slice()
   };
   x.basis = per100Of(x);
+  if (ingCode){
+    rememberCode(ingCode, { name:x.name, g:x.g, cal:x.cal, p:x.p, c:x.c, f:x.f, b:x.b,
+                            cats:x.cats, adds:x.adds });
+    ingCode = null;
+  }
   if (ingIx >= 0) recipe.ings[ingIx] = x; else recipe.ings.push(x);
   closeIng();
   renderIngs();
@@ -2951,6 +3148,7 @@ $("impFile").onchange = function(){
     render();
     renderFavManage();
     renderPrepManage();
+    if (page === "set") renderCodeCount();
     var fd = Object.keys(obj.days || {}).length;
     var ff = (obj.favourites || []).length;
     setBackupMsg("Merged " + plural(fd, "day", "days") + " and " + plural(ff, "food", "foods") +
