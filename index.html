@@ -52,7 +52,7 @@ body{
   #frame{border:none;width:100dvw;height:100dvh}
   #top{padding-top:calc(10px + env(safe-area-inset-top))}
   #tabbar{padding-bottom:calc(9px + env(safe-area-inset-bottom))}
-  #fab{bottom:calc(76px + env(safe-area-inset-bottom))}
+  #fab{bottom:calc(86px + env(safe-area-inset-bottom))}
 }
 
 /* ---------- boot ---------- */
@@ -150,11 +150,14 @@ input:focus{border-color:var(--grn);box-shadow:0 0 0 1px var(--glow)}
 input::placeholder{color:var(--grn-fade);opacity:.6}
 input[type=number]{-moz-appearance:textfield}
 input[type=number]::-webkit-outer-spin-button,input[type=number]::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
-input[type=checkbox]{-webkit-appearance:none;appearance:none;width:15px;height:15px;flex:0 0 auto;
-  border:1px solid var(--line);border-radius:2px;background:#040704;position:relative;cursor:pointer;margin:0}
+input[type=checkbox]{-webkit-appearance:none;appearance:none;flex:0 0 auto;margin:0;padding:0;
+  width:calc(19px*var(--fs));height:calc(19px*var(--fs));min-width:calc(19px*var(--fs));
+  border:1px solid var(--line);border-radius:3px;background:#040704;position:relative;cursor:pointer}
 input[type=checkbox]:checked{background:var(--grn);border-color:var(--grn);box-shadow:0 0 8px var(--glow)}
-input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px;width:4px;height:8px;
+input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%;width:22%;height:48%;
   border:solid #03140a;border-width:0 2px 2px 0;transform:rotate(45deg)}
+.chk{display:flex;gap:9px;align-items:center;cursor:pointer;margin:6px 0 10px;padding:5px 0;
+  font-size:calc(12px*var(--fs));color:var(--txt)}
 
 /* ---------- train ---------- */
 #trainq{font-size:calc(13px*var(--fs));margin-bottom:9px}
@@ -216,13 +219,13 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px
 .pg{display:none}
 .pg.on{display:block}
 #pgTitle{font-size:calc(12px*var(--fs));letter-spacing:.14em;color:var(--txt)}
-#tabbar{flex:0 0 auto;display:flex;border-top:1px solid var(--line);background:var(--panel2);padding:7px 3px 9px}
-.tb{flex:1 1 0;text-align:center;font-size:calc(8.5px*var(--fs));letter-spacing:.09em;color:var(--grn-fade);
-  padding:2px 0;cursor:pointer;background:none;border:none;font-family:var(--mono);min-width:0}
-.tb .ic{display:block;font-size:calc(13px*var(--fs));line-height:1.3;margin-bottom:3px}
+#tabbar{flex:0 0 auto;display:flex;border-top:1px solid var(--line);background:var(--panel2);padding:9px 2px 11px}
+.tb{flex:1 1 0;text-align:center;font-size:calc(10.5px*var(--fs));letter-spacing:.08em;color:var(--grn-fade);
+  padding:3px 0;cursor:pointer;background:none;border:none;font-family:var(--mono);min-width:0}
+.tb .ic{display:block;font-size:calc(18px*var(--fs));line-height:1.25;margin-bottom:4px}
 .tb.on{color:var(--grn)}
 .tb.on .ic{text-shadow:0 0 10px var(--glow)}
-#fab{position:absolute;right:14px;bottom:76px;width:48px;height:48px;border-radius:50%;z-index:20;
+#fab{position:absolute;right:14px;bottom:86px;width:48px;height:48px;border-radius:50%;z-index:20;
   background:var(--grn);color:#03140a;border:none;font-size:calc(24px*var(--fs));line-height:46px;
   text-align:center;box-shadow:0 0 22px var(--glow);font-family:var(--mono);cursor:pointer;padding:0}
 #fab:active{transform:scale(.94)}
@@ -652,8 +655,8 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px
           <div class="fld"><label>FAT g</label><input type="number" id="fF" inputmode="decimal" placeholder="opt"></div>
           <div class="fld"><label>FIBRE g</label><input type="number" id="fB" inputmode="decimal" placeholder="opt"></div>
         </div>
-        <label style="font-size:calc(11px*var(--fs));display:flex;gap:7px;align-items:center;margin:4px 0 9px">
-          <input type="checkbox" id="fSave" style="width:auto;accent-color:#3dff6e"> save to my foods
+        <label class="chk">
+          <input type="checkbox" id="fSave"> save to my foods
         </label>
       </div>
 
@@ -756,7 +759,7 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:4px;top:1px
 (function(){
 "use strict";
 
-var VERSION = "3.0.0";
+var VERSION = "3.0.1";
 var NOVA = ["", "ANIMAL", "PLANT", "SUGAR & SALT", "INDUSTRIAL", "MOUTHFEEL", "PRESERVATIVE", "COLOUR & FLAVOUR"];
 var DIRTY = [4,5,6,7];
 var OLD2NEW = {1:2,2:3,3:4,4:4};
