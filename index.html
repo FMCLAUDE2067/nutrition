@@ -142,6 +142,11 @@ body{
 #wrow{display:flex;gap:5px;margin-top:9px}
 #wrow .btn{flex:1 1 0;padding:5px 2px}
 #wcustom{display:flex;gap:5px;margin-top:5px}
+textarea{background:#040704;border:1px solid var(--line-faint);color:var(--txt);font-family:var(--mono);
+  font-size:calc(11px*var(--fs));padding:8px;width:100%;outline:none;border-radius:var(--r);
+  resize:vertical;line-height:1.5}
+textarea:focus{border-color:var(--grn);box-shadow:0 0 0 1px var(--glow)}
+textarea::placeholder{color:var(--grn-fade);opacity:.45}
 input[type=text],input[type=number],input[type=password]{
   background:#040704;border:1px solid var(--line-faint);color:var(--txt);font-family:var(--mono);
   font-size:calc(12px*var(--fs));padding:7px 8px;width:100%;outline:none;border-radius:var(--r)
@@ -199,6 +204,7 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
 .fld label{display:block;font-size:calc(9.5px*var(--fs));letter-spacing:.11em;color:var(--grn-dim);margin-bottom:4px}
 .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px}
 .g4{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:5px}
+.g4 > .btn{padding:7px 2px;letter-spacing:.03em;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .g4 input{padding:5px 3px;text-align:center}
 .g2{display:grid;grid-template-columns:1fr 1fr;gap:6px}
 #favlist{max-height:170px;overflow-y:auto;border:1px solid var(--line-faint);border-radius:var(--r);margin-bottom:9px}
@@ -441,8 +447,9 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
       <div id="paneRecipe">
         <div class="fld"><label>RECIPE NAME</label><input type="text" id="rName" placeholder="chicken and rice batch"></div>
         <div id="inglist" style="max-height:190px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
-        <div class="g3" style="margin-top:7px">
+        <div class="g4" style="margin-top:7px">
           <button class="btn" id="ingScan">SCAN</button>
+          <button class="btn" id="ingLabel">LABEL</button>
           <button class="btn" id="ingFav">MY FOODS</button>
           <button class="btn" id="ingNew">TYPE IN</button>
         </div>
@@ -643,7 +650,10 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
       </div>
 
       <div id="paneNew" style="display:none">
-        <button class="btn full" id="scanBtn" style="margin-bottom:9px">SCAN BARCODE</button>
+        <div class="g2" style="margin-bottom:9px">
+          <button class="btn" id="scanBtn">SCAN BARCODE</button>
+          <button class="btn" id="labelBtn">READ LABEL</button>
+        </div>
         <div class="fld"><label>NAME</label><input type="text" id="fName" placeholder="chicken breast"></div>
         <div class="fld"><label>WEIGHT OF THIS AMOUNT (g)</label><input type="number" id="fG" inputmode="numeric" placeholder="150"></div>
         <div class="fld">
@@ -733,17 +743,49 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
 
   <div class="modal" id="scanModal">
     <div class="sheet">
-      <h3><span>SCAN BARCODE</span><button class="btn sm" id="scanX">CANCEL</button></h3>
-      <div id="reader" style="width:100%;min-height:180px;border:1px solid var(--line-faint)"></div>
-      <div class="hint" id="scanMsg">Point the camera at the barcode.</div>
+      <h3><span id="scanTitle">SCAN BARCODE</span><button class="btn sm" id="scanX">CANCEL</button></h3>
+      <div class="hint" id="scanMsg" style="margin-top:0;margin-bottom:10px">Point the camera at the barcode.</div>
 
-      <div style="margin-top:9px">
-        <div class="fld"><label>OR TYPE THE NUMBER</label>
-          <div style="display:flex;gap:5px">
-            <input type="text" id="manIn" inputmode="numeric" placeholder="9300675024235" autocomplete="off">
-            <button class="btn" id="manGo" style="flex:0 0 86px">LOOK UP</button>
+      <div id="codePane">
+        <div id="reader" style="width:100%;min-height:180px;border:1px solid var(--line-faint)"></div>
+        <div style="margin-top:9px">
+          <div class="fld"><label>OR TYPE THE NUMBER</label>
+            <div style="display:flex;gap:5px">
+              <input type="text" id="manIn" inputmode="numeric" placeholder="9300675024235" autocomplete="off">
+              <button class="btn" id="manGo" style="flex:0 0 86px">LOOK UP</button>
+            </div>
           </div>
         </div>
+        <button class="btn full dim" id="toLabel" style="margin-top:4px">READ THE NUTRITION PANEL INSTEAD</button>
+      </div>
+
+      <div id="labelPane" style="display:none">
+        <div class="tabs">
+          <button class="btn on" id="labTabPaste">PASTE</button>
+          <button class="btn" id="labTabPhoto">PHOTO</button>
+        </div>
+
+        <div id="labPaste">
+          <textarea id="labText" rows="7" placeholder="Energy          433kJ    1440kJ
+Protein          3.6g     12.0g
+Fat, total       0.4g      1.3g
+Carbohydrate    20.1g     67.0g
+Dietary fibre    3.3g     11.0g"></textarea>
+          <div class="hint">Photograph the panel in your camera app, press and hold the text, then Copy and paste it here. iPhone calls this Live Text, Android does it through Google Lens. Their reading is better than anything this app can do on its own.</div>
+        </div>
+
+        <div id="labPhoto" style="display:none">
+          <input type="file" id="labFile" accept="image/*" capture="environment" style="display:none">
+          <button class="btn full" id="labPick">TAKE OR CHOOSE A PHOTO</button>
+          <img id="labPrev" alt="" style="display:none;width:100%;margin-top:9px;border:1px solid var(--line-faint);border-radius:var(--r)">
+          <div class="hint">Fill the frame with the panel alone and hold the camera square on. Reading it here is slower and less accurate than pasting, so use this when copying text is awkward.</div>
+        </div>
+
+        <div class="fld" style="margin-top:10px"><label>NAME (optional)</label>
+          <input type="text" id="labName" placeholder="what is it" autocomplete="off"></div>
+        <button class="btn full" id="labGo">READ IT</button>
+        <div class="hint" id="labMsg"></div>
+        <button class="btn full dim" id="labBack" style="margin-top:9px">BACK</button>
       </div>
 
       <div id="findPane" style="display:none;margin-top:11px">
@@ -755,7 +797,10 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
         </div>
         <div id="offList" style="max-height:170px;overflow-y:auto;border:1px solid var(--line-faint)"></div>
         <div class="hint" id="offHint"></div>
-        <button class="btn full dim" id="offManual" style="margin-top:9px">TYPE THE LABEL VALUES IN</button>
+        <div class="g2" style="margin-top:9px">
+          <button class="btn" id="offLabel">READ THE PANEL</button>
+          <button class="btn dim" id="offManual">TYPE IT IN</button>
+        </div>
       </div>
 
       <div id="gramsPane" style="display:none;margin-top:11px">
@@ -777,7 +822,7 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
 (function(){
 "use strict";
 
-var VERSION = "3.1.0";
+var VERSION = "3.2.0";
 var NOVA = ["", "ANIMAL", "PLANT", "SUGAR & SALT", "INDUSTRIAL", "MOUTHFEEL", "PRESERVATIVE", "COLOUR & FLAVOUR"];
 var DIRTY = [4,5,6,7];
 var OLD2NEW = {1:2,2:3,3:4,4:4};
@@ -2386,11 +2431,27 @@ function loadLib(){
   });
   return libLoading;
 }
+function scanPane(which){
+  $("codePane").style.display  = which === "code"  ? "" : "none";
+  $("findPane").style.display  = which === "find"  ? "" : "none";
+  $("labelPane").style.display = which === "label" ? "" : "none";
+  $("gramsPane").style.display = which === "grams" ? "" : "none";
+  $("scanTitle").textContent = which === "label" ? "READ THE LABEL"
+    : (which === "find" ? "SEARCH BY NAME"
+    : (which === "grams" ? "CHECK THE NUMBERS" : "SCAN BARCODE"));
+  if (which !== "code" && scanner){
+    try { scanner.stop(); } catch(e){}
+    scanner = null;
+  }
+}
+
 function closeScan(){
   $("scanModal").className = "modal";
   $("gramsPane").style.display = "none";
   $("findPane").style.display = "none";
-  per100 = null;
+  $("labelPane").style.display = "none";
+  $("codePane").style.display = "";
+  per100 = null; labImg = null;
   if (scanner){
     try { scanner.stop().then(function(){ try { scanner.clear(); } catch(e){} }); } catch(e){}
     scanner = null;
@@ -2410,17 +2471,40 @@ $("manGo").onclick = function(){
 };
 $("manIn").onkeydown = function(e){ if (e.key === "Enter") $("manGo").onclick(); };
 $("offGo").onclick = runOffSearch;
+$("toLabel").onclick = function(){ openLabel(null); };
+$("offLabel").onclick = function(){ openLabel(null); };
+$("labTabPaste").onclick = function(){ labTab("paste"); };
+$("labTabPhoto").onclick = function(){ labTab("photo"); };
+$("labGo").onclick = readLabel;
+$("labBack").onclick = function(){ scanPane(missedCode ? "find" : "code"); setScanMsg(missedCode ? "Barcode " + missedCode + " was not found." : "Point the camera at the barcode.", false); };
+$("labPick").onclick = function(){ $("labFile").click(); };
+$("labFile").onchange = function(){
+  var file = this.files && this.files[0];
+  this.value = "";
+  if (!file) return;
+  var url = URL.createObjectURL(file);
+  var im = new Image();
+  im.onload = function(){
+    labImg = im;
+    $("labPrev").src = url;
+    $("labPrev").style.display = "";
+    setLabMsg("Photo ready. Press READ IT.", false);
+  };
+  im.onerror = function(){ setLabMsg("That file could not be opened as an image.", true); };
+  im.src = url;
+};
 $("offSearch").onkeydown = function(e){ if (e.key === "Enter") runOffSearch(); };
 $("offManual").onclick = typeItIn;
 $("gramsWrong").onclick = typeItIn;
 
 $("scanBtn").onclick = function(){ openScan("food"); };
+$("labelBtn").onclick = function(){ openLabel("food"); };
 
 function openScan(target){
   scanTarget = target || "food";
   $("scanModal").className = "modal on";
-  $("gramsPane").style.display = "none";
-  $("findPane").style.display = "none";
+  scanPane("code");
+  missedCode = null;
   setScanMsg("Loading scanner...", false);
   if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia){
     setScanMsg("No camera access in this browser. Type the barcode number below instead.", true);
@@ -2505,8 +2589,7 @@ function showFound(code, msg, serveG){
   var extra = "  ·  " + per100.cats.map(function(c){ return NOVA[c]; }).join(" + ");
   $("prodName").textContent = per100.name + " — " + r(per100.cal) + " cal per 100g" + extra;
   $("gIn").value = (isFinite(serveG) && serveG > 0) ? serveG : 100;
-  $("findPane").style.display = "none";
-  $("gramsPane").style.display = "";
+  scanPane("grams");
   setScanMsg(msg, false);
   previewGrams();
 }
@@ -2575,8 +2658,7 @@ function lookup(code){
 /* ---------- name search fallback ---------- */
 function offerSearch(code){
   missedCode = code;
-  $("gramsPane").style.display = "none";
-  $("findPane").style.display = "";
+  scanPane("find");
   $("offList").textContent = "";
   $("offSearch").value = "";
   $("offHint").textContent = "Plenty of products are listed under a different barcode, so a name search often finds the same thing. Otherwise type the label values in.";
@@ -2667,6 +2749,320 @@ function typeItIn(){
   scannedCats = [4]; scannedAdds = [];
   tab("new");
   setFoodMsg("Barcode " + failed + " noted, food type set to PROCESSED since it is packaged. Fill in the values and it will be remembered against this barcode.", false);
+}
+
+/* ---------- label reader ---------- */
+var OCRLIB = "https://cdn.jsdelivr.net/npm/tesseract.js@6/dist/tesseract.min.js";
+var ocrLoading = null, labImg = null, labMode = "paste";
+
+function parseLabel(raw){
+  var t = String(raw || "");
+  if (!t.trim()) return null;
+  t = t.replace(/ /g, " ")
+       .replace(/[|│]/g, " ")
+       .replace(/[–—]/g, "-")
+       .replace(/(\d),(?=\d{3}(\D|$))/g, "$1")
+       .toLowerCase();
+
+  var lines = t.split(/[\r\n]+/), i;
+
+  /* serving size */
+  var serveG = null;
+  var m = t.match(/serv(?:ing|e)\s*size[^0-9]{0,14}([\d.]+)\s*(g|ml|gram)/);
+  if (!m) m = t.match(/serv(?:ing|e)\s*size[^0-9]{0,14}([\d.]+)/);
+  if (m){ var sg = parseFloat(m[1]); if (isFinite(sg) && sg > 0 && sg < 5000) serveG = sg; }
+
+  var hasDI = /%\s*d\.?i|daily\s*intake|%\s*rdi/.test(t);
+
+  /* which nutrient is this line about — order matters */
+  function keyOf(line){
+    if (/saturat/.test(line)) return "sat";
+    if (/sugar/.test(line)) return "sug";
+    if (/fib(re|er)/.test(line)) return "b";
+    if (/sodium|\bsalt\b/.test(line)) return "na";
+    if (/protein/.test(line)) return "p";
+    if (/energy|kilojoule/.test(line)) return "cal";
+    if (/carbohydrate|\bcarbs?\b/.test(line)) return "c";
+    if (/\bfat\b/.test(line)) return "f";
+    return null;
+  }
+  /* %DI / %RDI columns are not nutrient values, strip them before reading numbers */
+  function noPct(line){ return line.replace(/\d+(?:\.\d+)?\s*%/g, " "); }
+  function nums(line){
+    var a = noPct(line).match(/\d+(?:\.\d+)?/g) || [];
+    return a.map(parseFloat);
+  }
+
+  var rows = {}, energyKj = null, energyCal = null;
+  for (i = 0; i < lines.length; i++){
+    var line = lines[i];
+    var k = keyOf(line);
+    if (!k) continue;
+    line = noPct(line);
+    if (k === "cal"){
+      var kj = [], cal = [], mm, re;
+      re = /(\d+(?:\.\d+)?)\s*kj/g;
+      while ((mm = re.exec(line))) kj.push(parseFloat(mm[1]));
+      re = /(\d+(?:\.\d+)?)\s*(?:kcal|cal(?:ories)?)\b/g;
+      while ((mm = re.exec(line))) cal.push(parseFloat(mm[1]));
+      if (!kj.length && !cal.length){
+        /* unit lives in the row label, e.g. "energy (kj)  452  1506" */
+        var bare = nums(line).filter(function(v){ return v !== 100; });
+        if (/kj|kilojoule/.test(line)) kj = bare; else cal = bare;
+      }
+      if (kj.length) energyKj = (energyKj || []).concat(kj);
+      if (cal.length) energyCal = (energyCal || []).concat(cal);
+      continue;
+    }
+    var v = nums(line);
+    /* drop a stray "100" that came from a wrapped "per 100g" header */
+    if (v.length > 1 && v[0] === 100 && /per\s*100/.test(line)) v = v.slice(1);
+    if (v.length) rows[k] = (rows[k] || []).concat(v);
+  }
+
+  /* Phone OCR often reads a table column-wise: every label first, then every
+     number. Detect that (nutrient words found, but none of them had a value on
+     the same line) and re-slice the numbers into columns. */
+  var labelOnly = [], sawAny = 0, columnar = false;
+  for (i = 0; i < lines.length; i++){
+    var kk = keyOf(lines[i]);
+    if (!kk) continue;
+    sawAny++;
+    if (!nums(lines[i]).length) labelOnly.push({ k:kk, i:i });
+  }
+  if (labelOnly.length >= 3 && labelOnly.length === sawAny){
+    var vals = [], SKIP = /serv|package|pack\b|per\s*100|avg|average|qty|quantity|nutrition|information|%/;
+    var firstLabel = labelOnly[0].i;
+    for (i = firstLabel; i < lines.length; i++){
+      var ln = lines[i];
+      if (keyOf(ln) || SKIP.test(ln)) continue;
+      var vm = noPct(ln).match(/(\d+(?:\.\d+)?)\s*(kj|kcal|cal|mg|g|ml)?/i);
+      if (vm && vm[1] !== undefined && /\d/.test(ln)) vals.push({ n: parseFloat(vm[1]), u: (vm[2] || "").toLowerCase() });
+    }
+    var L = labelOnly.length;
+    if (vals.length >= L && vals.length % L === 0){
+      columnar = true;
+      var ncol = vals.length / L;
+      rows = {}; energyKj = null; energyCal = null;
+      for (var ci = 0; ci < ncol; ci++){
+        for (var li = 0; li < L; li++){
+          var cell = vals[ci * L + li], key = labelOnly[li].k;
+          if (key === "cal"){
+            if (cell.u === "kj") energyKj = (energyKj || []).concat([cell.n]);
+            else energyCal = (energyCal || []).concat([cell.n]);
+          } else {
+            rows[key] = (rows[key] || []).concat([cell.n]);
+          }
+        }
+      }
+    }
+  }
+
+  var eList = (energyKj && energyKj.length) ? energyKj : (energyCal || []);
+  var eIsKj = !!(energyKj && energyKj.length);
+  if (!eList.length) return { ok:false, why:"no energy value found", serveG:serveG };
+
+  /* build candidate columns and score each on Atwater consistency */
+  function at(col){
+    var e = eList[col];
+    if (!isFinite(e)) return null;
+    var kcal = eIsKj ? e / KJ : e;
+    var p = pickN(rows.p, col), c = pickN(rows.c, col), f = pickN(rows.f, col);
+    if (kcal <= 0) return null;
+    var cand = { kcal:kcal, p:p, c:c, f:f, col:col };
+    if (p === null && c === null && f === null){ cand.score = 1; return cand; }
+    var sum = 4*(p||0) + 4*(c||0) + 9*(f||0);
+    cand.score = sum > 0 ? Math.abs(kcal - sum) / Math.max(kcal, sum) : 1;
+    return cand;
+  }
+  function pickN(arr, col){
+    if (!arr) return null;
+    if (arr.length > col) return arr[col];
+    return arr.length === 1 ? arr[0] : null;
+  }
+
+  var cands = [], j;
+  for (j = 0; j < Math.min(eList.length, 3); j++){
+    var cd = at(j);
+    if (cd) cands.push(cd);
+  }
+  if (!cands.length) return { ok:false, why:"could not read the numbers", serveG:serveG };
+
+  var good = cands.filter(function(x){ return x.score <= 0.30; });
+  if (!good.length) good = cands;
+
+  /* decide which surviving column is the per 100 g one */
+  var chosen = good[good.length - 1], basis = "per 100 g", guessed = true;
+  if (good.length >= 2 && serveG){
+    var want = 100 / serveG, best = null, bestErr = 1e9;
+    for (j = 0; j < good.length; j++){
+      for (var k2 = 0; k2 < good.length; k2++){
+        if (j === k2) continue;
+        var ratio = good[k2].kcal / good[j].kcal;
+        var err = Math.abs(ratio - want) / want;
+        if (err < bestErr){ bestErr = err; best = good[k2]; }
+      }
+    }
+    if (best && bestErr < 0.12){ chosen = best; guessed = false; }
+  }
+  if (good.length === 1 && serveG && Math.abs(serveG - 100) > 1){
+    /* only one column: the header wording says which basis it is */
+    var says100 = /per\s*100\s*(g|ml|m1)/.test(t);
+    var saysServe = /per\s*serv/.test(t);
+    if (says100){ guessed = false; }
+    else if (saysServe){ basis = "per serve"; guessed = false; }
+    else {
+      var pcf = (chosen.p||0) + (chosen.c||0) + (chosen.f||0);
+      if (pcf * (100/serveG) > 100) basis = "per serve";
+    }
+  }
+
+  var per100 = {
+    cal: chosen.kcal, p: chosen.p, c: chosen.c, f: chosen.f,
+    b: pickN(rows.b, chosen.col), na: pickN(rows.na, chosen.col),
+    sat: pickN(rows.sat, chosen.col), sug: pickN(rows.sug, chosen.col)
+  };
+  if (basis === "per serve" && serveG){
+    var k3 = 100 / serveG;
+    ["cal","p","c","f","b","na","sat","sug"].forEach(function(key){
+      if (per100[key] !== null) per100[key] = per100[key] * k3;
+    });
+  }
+
+  return {
+    ok: true, serveG: serveG, per100: per100, cols: eList.length, basis: basis, columnar: columnar,
+    energyWasKj: eIsKj, hasDI: hasDI, guessed: guessed,
+    fit: Math.round(chosen.score * 100)
+  };
+}
+
+function loadOcr(){
+  if (window.Tesseract) return Promise.resolve();
+  if (ocrLoading) return ocrLoading;
+  ocrLoading = new Promise(function(res, rej){
+    var el = document.createElement("script");
+    el.src = OCRLIB;
+    el.onload = function(){ window.Tesseract ? res() : rej(new Error("the OCR library did not load")); };
+    el.onerror = function(){ rej(new Error("could not download the OCR library")); };
+    document.head.appendChild(el);
+  });
+  return ocrLoading;
+}
+
+/* greyscale and stretch the contrast, which helps Tesseract a lot on print */
+function prepCanvas(img){
+  var maxW = 1600;
+  var sc = img.naturalWidth > maxW ? maxW / img.naturalWidth : 1;
+  var w = Math.max(1, Math.round(img.naturalWidth * sc));
+  var h = Math.max(1, Math.round(img.naturalHeight * sc));
+  var cv = document.createElement("canvas");
+  cv.width = w; cv.height = h;
+  var cx = cv.getContext("2d");
+  cx.drawImage(img, 0, 0, w, h);
+  try {
+    var d = cx.getImageData(0, 0, w, h), a = d.data, i, lo = 255, hi = 0, g;
+    for (i = 0; i < a.length; i += 4){
+      g = (a[i] * 0.299 + a[i+1] * 0.587 + a[i+2] * 0.114) | 0;
+      a[i] = a[i+1] = a[i+2] = g;
+      if (g < lo) lo = g;
+      if (g > hi) hi = g;
+    }
+    var span = Math.max(1, hi - lo);
+    for (i = 0; i < a.length; i += 4){
+      g = ((a[i] - lo) * 255 / span) | 0;
+      g = g < 0 ? 0 : (g > 255 ? 255 : g);
+      a[i] = a[i+1] = a[i+2] = g;
+    }
+    cx.putImageData(d, 0, 0);
+  } catch(e){}
+  return cv;
+}
+
+function labTab(which){
+  labMode = which;
+  $("labPaste").style.display = which === "paste" ? "" : "none";
+  $("labPhoto").style.display = which === "photo" ? "" : "none";
+  $("labTabPaste").className = "btn" + (which === "paste" ? " on" : "");
+  $("labTabPhoto").className = "btn" + (which === "photo" ? " on" : "");
+}
+
+function openLabel(target){
+  if (target) scanTarget = target;
+  $("scanModal").className = "modal on";
+  scanPane("label");
+  labTab("paste");
+  $("labText").value = "";
+  $("labName").value = "";
+  $("labPrev").style.display = "none";
+  labImg = null;
+  setLabMsg("", false);
+  setScanMsg("Paste the panel, or photograph it and let the app read it.", false);
+}
+
+function setLabMsg(m, bad){
+  $("labMsg").textContent = m;
+  $("labMsg").style.color = bad ? "var(--bad)" : "var(--grn-fade)";
+}
+
+function readLabel(){
+  if (labMode === "paste"){
+    var txt = $("labText").value;
+    if (!txt.trim()){ setLabMsg("Paste the panel text first.", true); flash($("labText")); return; }
+    applyLabel(txt);
+    return;
+  }
+  if (!labImg){ setLabMsg("Take or choose a photo first.", true); flash($("labPick")); return; }
+  setLabMsg("Loading the reader...", false);
+  $("labGo").disabled = true;
+  loadOcr().then(function(){
+    setLabMsg("Reading the panel, this can take a while on a phone...", false);
+    return window.Tesseract.recognize(prepCanvas(labImg), "eng", {
+      logger: function(p){
+        if (p && p.status === "recognizing text"){
+          setLabMsg("Reading the panel... " + Math.round((p.progress || 0) * 100) + "%", false);
+        }
+      }
+    });
+  }).then(function(res){
+    $("labGo").disabled = false;
+    var text = res && res.data ? res.data.text : "";
+    if (!text || !text.trim()){ setLabMsg("Nothing readable came off that photo. Try pasting instead.", true); return; }
+    applyLabel(text);
+  })["catch"](function(e){
+    $("labGo").disabled = false;
+    setLabMsg((e && e.message ? e.message : "reading failed") + ". Try pasting the text instead.", true);
+  });
+}
+
+function applyLabel(text){
+  var res = parseLabel(text);
+  if (!res || !res.ok){
+    setLabMsg((res && res.why ? "Could not read it: " + res.why : "Could not make sense of that") +
+      ". Check the energy row came through, or type the values in by hand.", true);
+    return;
+  }
+  var q = res.per100;
+  var name = $("labName").value.trim() || "Label scan";
+  per100 = {
+    name: name, cal: q.cal,
+    p: q.p, c: q.c, f: q.f, b: q.b,
+    cats: classifyName(name), adds: [], unknown: 0
+  };
+  if (missedCode){
+    rememberCode(missedCode, { name:name, g:100, cal:q.cal, p:q.p, c:q.c, f:q.f, b:q.b,
+                               cats:per100.cats, adds:[] });
+  }
+  var bits = [r(q.cal) + " cal"];
+  if (q.p !== null) bits.push("P" + r1(q.p));
+  if (q.c !== null) bits.push("C" + r1(q.c));
+  if (q.f !== null) bits.push("F" + r1(q.f));
+  bits.push(q.b !== null ? "Fb" + r1(q.b) : "no fibre on the label");
+  var msg = "Read " + bits.join(" ") + " per 100g.";
+  if (res.serveG) msg += " Serving size " + r1(res.serveG) + "g.";
+  if (res.basis === "per serve") msg += " Converted up from the per serve column.";
+  if (res.columnar) msg += " The panel came through column by column, so check the numbers.";
+  if (res.fit > 20) msg += " The energy does not quite match the macros, so check them against the packet.";
+  showFound(missedCode, msg, res.serveG);
 }
 
 function pick(n, key){ return typeof n[key] === "number" ? n[key] : null; }
@@ -2999,6 +3395,7 @@ $("ingDel").onclick = function(){
 
 $("ingNew").onclick = function(){ $("ingPick").style.display = "none"; openIngNew({}, null, null, [], ""); };
 $("ingScan").onclick = function(){ $("ingPick").style.display = "none"; openScan("recipe"); };
+$("ingLabel").onclick = function(){ $("ingPick").style.display = "none"; openLabel("recipe"); };
 $("ingFav").onclick = function(){
   var open = $("ingPick").style.display === "none";
   $("ingPick").style.display = open ? "" : "none";
