@@ -221,6 +221,10 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
 .tabs .btn{flex:1 1 0;border:none;border-right:1px solid var(--line-faint);border-radius:0}
 .tabs .btn:last-child{border-right:none}
 .hint{font-size:calc(9.5px*var(--fs));color:var(--grn-fade);line-height:1.6;margin-top:8px}
+.mirror{font-size:calc(10px*var(--fs));color:var(--grn-fade);line-height:1.65;margin-top:6px;min-height:calc(16px*var(--fs))}
+.mirror b{font-weight:400;color:var(--grn)}
+.mirror u{text-decoration:none;color:var(--line)}
+.mirror i{font-style:normal;color:var(--warn)}
 /* ---------- pages + tab bar ---------- */
 .pg{display:none}
 .pg.on{display:block}
@@ -659,10 +663,11 @@ input[type=checkbox]:checked:after{content:"";position:absolute;left:34%;top:12%
         <div class="fld">
           <label>ENERGY FOR THAT WEIGHT</label>
           <div style="display:flex;gap:5px">
-            <input type="number" id="fCal" inputmode="numeric" placeholder="248">
-            <button class="btn on" id="unitCal" style="flex:0 0 46px">CAL</button>
-            <button class="btn" id="unitKj" style="flex:0 0 46px">kJ</button>
+            <input type="number" id="fCal" inputmode="decimal" placeholder="248">
+            <button class="btn on" id="unitCal" style="flex:0 0 50px">CAL</button>
+            <button class="btn" id="unitKj" style="flex:0 0 50px">kJ</button>
           </div>
+          <div class="mirror" id="calMirror"></div>
         </div>
         <div class="g4">
           <div class="fld"><label>PROT g</label><input type="number" id="fP" inputmode="decimal" placeholder="opt"></div>
@@ -822,7 +827,7 @@ Dietary fibre    3.3g     11.0g"></textarea>
 (function(){
 "use strict";
 
-var VERSION = "3.2.0";
+var VERSION = "3.2.1";
 var NOVA = ["", "ANIMAL", "PLANT", "SUGAR & SALT", "INDUSTRIAL", "MOUTHFEEL", "PRESERVATIVE", "COLOUR & FLAVOUR"];
 var DIRTY = [4,5,6,7];
 var OLD2NEW = {1:2,2:3,3:4,4:4};
@@ -1760,6 +1765,7 @@ function openFood(){
   $("fP").value = ""; $("fC").value = ""; $("fF").value = ""; $("fB").value = "";
   $("fSave").checked = false;
   setUnit(false);
+  drawMirror();
   $("foodTitle").textContent = "ADD FOOD";
   $("favSearch").value = "";
   setFoodMsg("Macros are optional. The macro bars flag partial data when something in the day is missing a value.", false);
@@ -1883,6 +1889,57 @@ function setUnit(kj){
   kjMode = kj;
   $("unitCal").className = "btn" + (kj ? "" : " on");
   $("unitKj").className = "btn" + (kj ? " on" : "");
+  drawMirror();
+}
+
+/* pressing the other unit converts what is in the box rather than quietly
+   changing what it means, then the mirror shows the value both ways */
+var lastConv = null;
+function switchUnit(kj){
+  if (kjMode === kj) return;
+  var v = parseFloat($("fCal").value);
+  if (isFinite(v)){
+    /* flipping back and forth should land on the number you first typed,
+       not creep by a rounding step each time */
+    if (lastConv && lastConv.toKj !== kj && +$("fCal").value === lastConv.to){
+      $("fCal").value = lastConv.from;
+      lastConv = null;
+    } else {
+      var out = kj ? v * KJ : v / KJ;
+      var shown = kj ? r(out) : r1(out);
+      lastConv = { from: v, to: shown, toKj: kj };
+      $("fCal").value = shown;
+    }
+  }
+  setUnit(kj);
+}
+
+function drawMirror(){
+  var el = $("calMirror");
+  if (!el) return;
+  var v = parseFloat($("fCal").value);
+  if (!isFinite(v) || v < 0){
+    el.innerHTML = "";
+    return;
+  }
+  var cal = kjMode ? v / KJ : v;
+  var kj = kjMode ? v : v * KJ;
+  var line = kjMode
+    ? "= <b>" + fmtNum(cal) + "</b> cal"
+    : "= <b>" + fmtNum(kj) + "</b> kJ";
+  var g = parseFloat($("fG").value);
+  if (isFinite(g) && g > 0){
+    line += "<br>per 100g: <b>" + fmtNum(cal / g * 100) + "</b> cal <u>&middot;</u> <b>" +
+            fmtNum(kj / g * 100) + "</b> kJ";
+    if (cal / g * 100 > 950) line += " <i>check the weight</i>";
+  } else {
+    line += "<br><u>add a weight for the per 100g check</u>";
+  }
+  el.innerHTML = line;
+}
+function fmtNum(x){
+  var n = Math.round(x);
+  return n.toLocaleString ? n.toLocaleString("en-AU") : "" + n;
 }
 function setFoodMsg(msg, bad){
   var el = $("foodMsg");
@@ -2093,8 +2150,10 @@ $("copyYest").onclick = copyYesterday;
 $("tabPrep").onclick = function(){ tab("prep"); };
 $("tabFav").onclick = function(){ tab("fav"); };
 $("tabNew").onclick = function(){ tab("new"); };
-$("unitCal").onclick = function(){ setUnit(false); };
-$("unitKj").onclick = function(){ setUnit(true); };
+$("unitCal").onclick = function(){ switchUnit(false); };
+$("unitKj").onclick = function(){ switchUnit(true); };
+$("fCal").oninput = function(){ lastConv = null; drawMirror(); };
+$("fG").oninput = drawMirror;
 $("favSearch").oninput = renderFavs;
 $("foodX").onclick = function(){ $("foodModal").className = "modal"; };
 $("foodAdd").onclick = commitFood;
@@ -3125,6 +3184,7 @@ function fillForm(name, g, cal, p, c, f, b){
   $("fC").value = c === null || c === undefined ? "" : r1(c);
   $("fF").value = f === null || f === undefined ? "" : r1(f);
   $("fB").value = b === null || b === undefined ? "" : r1(b);
+  drawMirror();
 }
 
 /* ---------- meal prep ---------- */
