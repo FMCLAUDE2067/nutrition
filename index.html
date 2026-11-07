@@ -423,6 +423,12 @@ input[type=checkbox]:checked{box-shadow:none}
 .qalt{text-align:left;background:var(--bg);border:1px solid var(--line);border-radius:10px;color:var(--txt);font-family:var(--mono);font-size:calc(13px*var(--fs));padding:9px 11px;cursor:pointer;display:flex;justify-content:space-between;gap:10px}
 .qalt b{font-family:var(--num);font-weight:700;white-space:nowrap}
 .qalt.on{border-color:var(--grn)}
+#foodBar.stick{position:sticky;bottom:-28px;margin:12px -16px -28px;padding:12px 16px 28px;background:var(--panel2);border-top:1px solid var(--line);box-shadow:0 -10px 24px rgba(0,0,0,.45);z-index:2}
+#foodBar #gramsRow{margin-top:0}
+#selName{font-size:calc(14px*var(--fs));font-weight:500;margin-bottom:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.grow{display:flex;align-items:center;gap:10px}
+.grow input{font-family:var(--num);font-weight:700;font-size:max(16px,calc(22px*var(--fs)))!important;padding:8px 12px}
+.gu{font-size:calc(15px*var(--fs));color:var(--grn-dim)}
 </style>
 </head>
 <body>
@@ -663,15 +669,19 @@ input[type=checkbox]:checked{box-shadow:none}
         </div>
       </div>
 
-      <div id="gramsRow" style="display:none">
-        <div class="fld">
-          <label id="gramsLab">HOW MANY GRAMS?</label>
-          <input type="number" id="qG" inputmode="numeric" placeholder="100">
+      <div id="foodBar">
+        <div id="gramsRow" style="display:none">
+          <div id="selName"></div>
+          <div class="grow">
+            <label class="fld" style="margin:0;flex:1 1 auto"><span id="gramsLab" class="sr">HOW MANY GRAMS?</span>
+              <input type="number" id="qG" inputmode="numeric" placeholder="grams" aria-label="How many grams"></label>
+            <span class="gu">g</span>
+          </div>
+          <div class="hint" id="gramsOut" style="margin-top:6px"></div>
         </div>
-        <div class="hint" id="gramsOut" style="margin-top:0"></div>
+        <button class="btn full pri" id="foodAdd" style="margin-top:9px">ADD TO LOG</button>
+        <div class="hint" id="foodMsg"></div>
       </div>
-      <button class="btn full pri" id="foodAdd" style="margin-top:9px">ADD TO LOG</button>
-      <div class="hint" id="foodMsg"></div>
     </div>
   </div>
 
@@ -798,7 +808,7 @@ Dietary fibre    3.3g     11.0g"></textarea>
 (function(){
 "use strict";
 
-var VERSION = "4.2.0";
+var VERSION = "4.2.1";
 var NOVA = ["", "ANIMAL", "PLANT", "SUGAR & SALT", "INDUSTRIAL", "MOUTHFEEL", "PRESERVATIVE", "COLOUR & FLAVOUR"];
 var DIRTY = [4,5,6,7];
 var OLD2NEW = {1:2,2:3,3:4,4:4};
@@ -1486,9 +1496,10 @@ function setPrepMsg(msg, bad){
 }
 function syncGramsRow(){
   var s = sel();
-  if (!s || !s.g){ $("gramsRow").style.display = "none"; $("gramsOut").textContent = ""; return; }
+  if (!s || !s.g){ $("gramsRow").style.display = "none"; $("gramsOut").textContent = ""; $("foodBar").className = ""; return; }
   $("gramsRow").style.display = "";
-  $("gramsLab").textContent = "HOW MANY GRAMS? (saved as " + r(s.g) + "g)";
+  $("foodBar").className = "stick";
+  $("selName").textContent = s.name + "  ·  saved as " + r(s.g) + " g";
   if (!$("qG").value) $("qG").value = r(s.g);
   previewSel();
 }
