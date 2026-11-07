@@ -429,6 +429,14 @@ input[type=checkbox]:checked{box-shadow:none}
 .grow{display:flex;align-items:center;gap:10px}
 .grow input{font-family:var(--num);font-weight:700;font-size:max(16px,calc(22px*var(--fs)))!important;padding:8px 12px}
 .gu{font-size:calc(15px*var(--fs));color:var(--grn-dim)}
+.acts{grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.act{height:calc(70px*var(--fs));font-size:calc(11.5px*var(--fs));gap:5px;padding:0 2px;text-align:center;line-height:1.15}
+.act svg{width:22px;height:22px}
+.act.pri.on{box-shadow:inset 0 0 0 2px var(--ink)}
+.frow{display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--line-faint)}
+.frow .fav{border-bottom:none;flex:1 1 auto;min-width:0}
+.fedit{flex:0 0 auto;width:40px;height:40px;border-radius:10px;border:1px solid var(--line);background:#1F2125;color:var(--grn-dim);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.fedit svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2}
 </style>
 </head>
 <body>
@@ -605,6 +613,7 @@ input[type=checkbox]:checked{box-shadow:none}
       </div>
 
       <div class="acts">
+        <button class="act on" id="savedBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 4h12v17l-6-4-6 4z"/></svg>Saved foods</button>
         <button class="act pri" id="scanBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7V5a1 1 0 0 1 1-1h2M17 4h2a1 1 0 0 1 1 1v2M20 17v2a1 1 0 0 1-1 1h-2M7 20H5a1 1 0 0 1-1-1v-2M8 8v8M11 8v8M14 8v8M17 8v8"/></svg>Scan barcode</button>
         <button class="act" id="prepBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="9" width="18" height="11" rx="2"/><path d="M2 9h20M8 5h8M12 5v4"/></svg>Prep</button>
         <button class="act" id="manBtn"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>Manual</button>
@@ -617,7 +626,7 @@ input[type=checkbox]:checked{box-shadow:none}
       </div>
 
       <div id="panePrep" style="display:none">
-        <div class="hd" style="margin:4px 0 2px">MEAL PREP <span>tap one to edit</span></div>
+        <div class="hd" style="margin:4px 0 2px">MEAL PREP <span>tap to log one serve</span></div>
         <div id="preplist" class="list"></div>
 
         <div class="hd" style="margin:20px 0 10px">ADD A MEAL PREP</div>
@@ -642,7 +651,6 @@ input[type=checkbox]:checked{box-shadow:none}
       </div>
 
       <div id="paneNew" style="display:none">
-        <button class="btn sm ghost" id="backList" style="margin-bottom:10px">&lsaquo; SAVED FOODS</button>
         <div class="fld"><label>NAME</label><input type="text" id="fName" placeholder="chicken breast"></div>
         <div class="fld"><label>WEIGHT OF THIS AMOUNT (g)</label><input type="number" id="fG" inputmode="numeric" placeholder="150"></div>
         <div class="fld">
@@ -808,7 +816,7 @@ Dietary fibre    3.3g     11.0g"></textarea>
 (function(){
 "use strict";
 
-var VERSION = "4.2.1";
+var VERSION = "4.3.0";
 var NOVA = ["", "ANIMAL", "PLANT", "SUGAR & SALT", "INDUSTRIAL", "MOUTHFEEL", "PRESERVATIVE", "COLOUR & FLAVOUR"];
 var DIRTY = [4,5,6,7];
 var OLD2NEW = {1:2,2:3,3:4,4:4};
@@ -1463,12 +1471,13 @@ function tab(which){
   $("panePrep").style.display = isPrep ? "" : "none";
   $("manBtn").className = "act" + (isNew ? " on" : "");
   $("prepBtn").className = "act" + (isPrep ? " on" : "");
+  $("savedBtn").className = "act" + (!isNew && !isPrep ? " on" : "");
   if (isNew || isPrep){ picked = null; pickedPrep = null; }
   if (isNew) setFoodMsg("Macros are optional. Anything missing counts as 0.", false);
   else setFoodMsg("", false);
   if (isPrep){ renderPrepPane(); setPrepMsg("Saved meal preps show in the main list with a PREP tag, ready to log.", false); }
   else if (!isNew) renderFavs();
-  $("foodAdd").style.display = isNew || (!isPrep && sel()) ? "" : "none";
+  $("foodAdd").style.display = isNew || sel() ? "" : "none";
   syncGramsRow();
 }
 function renderPrepPane(){
@@ -1481,7 +1490,20 @@ function renderPrepPane(){
   }
   useCounts = countUses();
   db.preps.slice().sort(function(a, b){ return a.name.localeCompare(b.name); }).forEach(function(p){
-    box.appendChild(pickRow(p, false, null, function(){ openEdit(p, "prep"); }));
+    var wrap = document.createElement("div");
+    wrap.className = "frow";
+    wrap.appendChild(pickRow(p, false, pickedPrep, function(){
+      pickedPrep = p; picked = null;
+      renderPrepPane(); syncGramsRow(); needsWeightMsg(p);
+      $("foodAdd").style.display = "";
+    }));
+    var ed = document.createElement("button");
+    ed.className = "fedit";
+    ed.setAttribute("aria-label", "Edit " + p.name);
+    ed.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
+    ed.onclick = function(){ openEdit(p, "prep"); };
+    wrap.appendChild(ed);
+    box.appendChild(wrap);
   });
 }
 var pKj = false;
@@ -1499,14 +1521,16 @@ function syncGramsRow(){
   if (!s || !s.g){ $("gramsRow").style.display = "none"; $("gramsOut").textContent = ""; $("foodBar").className = ""; return; }
   $("gramsRow").style.display = "";
   $("foodBar").className = "stick";
-  $("selName").textContent = s.name + "  ·  saved as " + r(s.g) + " g";
+  var whole = s === pickedPrep;
+  $("gramsRow").querySelector(".grow").style.display = whole ? "none" : "";
+  $("selName").textContent = s.name + "  ·  " + (whole ? "1 serve, " + r(s.g) + " g" : "saved as " + r(s.g) + " g");
   if (!$("qG").value) $("qG").value = r(s.g);
   previewSel();
 }
 function previewSel(){
   var s = sel();
   if (!s || !s.g){ $("gramsOut").textContent = ""; return; }
-  var g = parseFloat($("qG").value);
+  var g = s === pickedPrep ? s.g : parseFloat($("qG").value);
   if (!isFinite(g) || g <= 0){ $("gramsOut").textContent = ""; return; }
   var k = g / s.g, bits = ["" + r(num(s.cal) * k) + " cal"];
   if (!blank(s.p)) bits.push("P" + r1(num(s.p) * k));
@@ -1649,7 +1673,7 @@ function renderFavs(){
       $("qG").value = e.it.g ? r(e.it.g) : "";
       renderFavs(); syncGramsRow(); needsWeightMsg(e.it);
       $("foodAdd").style.display = "";
-      setTimeout(function(){ try { $("qG").focus(); $("qG").select(); } catch(err){} }, 30);
+      if (!e.prep) setTimeout(function(){ try { $("qG").focus(); $("qG").select(); } catch(err){} }, 30);
     }));
   });
 }
@@ -1673,7 +1697,7 @@ function commitFood(){
       return;
     }
     if (!src.g){ needsWeightMsg(src); flash($("gramsRow")); return; }
-    var g = parseFloat($("qG").value);
+    var g = src === pickedPrep ? src.g : parseFloat($("qG").value);
     if (!isFinite(g) || g <= 0){ flash($("qG")); setFoodMsg("Enter how many grams.", true); return; }
     var k = g / src.g;
     item = {
@@ -1776,8 +1800,8 @@ for (var ri = 0; ri < $("rangeSeg").children.length; ri++){
     };
   })($("rangeSeg").children[ri]);
 }
-$("manBtn").onclick = function(){ tab($("paneNew").style.display === "none" ? "new" : "list"); };
-$("backList").onclick = function(){ tab("list"); };
+$("manBtn").onclick = function(){ tab("new"); };
+$("savedBtn").onclick = function(){ tab("list"); };
 $("manSearch").oninput = renderSaved;
 for (var si = 0; si < $("saveSeg").children.length; si++){
   (function(btn){ btn.onclick = function(){ setSaveAs(btn.getAttribute("data-sv")); }; })($("saveSeg").children[si]);
@@ -2238,7 +2262,7 @@ $("offManual").onclick = typeItIn;
 $("gramsWrong").onclick = typeItIn;
 
 $("scanBtn").onclick = function(){ openScan("food"); };
-$("prepBtn").onclick = function(){ tab($("panePrep").style.display === "none" ? "prep" : "list"); };
+$("prepBtn").onclick = function(){ tab("prep"); };
 $("pUnitCal").onclick = function(){ setPrepUnit(false); };
 $("pUnitKj").onclick = function(){ setPrepUnit(true); };
 $("prepSave").onclick = function(){
